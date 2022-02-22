@@ -1,5 +1,7 @@
 // Entrar en modo numerado de apartados
 :numbered:
+:encoding: utf-8
+:lang: es
 
 = Prerrequisitos
 
