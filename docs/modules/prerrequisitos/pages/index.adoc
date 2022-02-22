@@ -3,16 +3,19 @@
 
 = Prerrequisitos
 
-[IMPORTANT]
-====
-Para realizar las actividades propuestas, como van a ser conectar a las instancias en GCP, lanzar Terraform, lanzar contenedores Docker, etc, puedes usar distintas formas. Dependiendo del sistema operativo de tu máquina local, te recomiendo los siguientes alternativas:
+== Entorno de desarrollo
+
+Existen distintas opciones respecto al entorno en el que realizar las actividades propuestas. Tendrás que conectar a las instancias en GCP, lanzar Terraform, lanzar contenedores Docker, etc. Dependiendo del sistema operativo de tu máquina local y de tus gustos personales, te recomiendo alguna las siguientes alternativas:
 
 - Windows: es recomendable usar un terminal basado en Linux, por ejemplo *Git Bash* (https://git-scm.com).
-- Linux y Mac: el *terminal del S.O* incluye todo lo necesario.
-- Cloud Shell de Google Cloud: la consola web de Google Cloud proporciona la herramienta *Cloud Shell* que permite trabajar cómodamente contra GCP desde cualquier navegador web y cualquier S.O.
+- Linux y Mac: el *terminal del S.O* incluye todas las herramientas básicas necesarias (_git_, _ssh_, _etc_).
+- *Cloud Shell de Google Cloud*: la consola web de Google Cloud proporciona la herramienta *Cloud Shell* que permite trabajar cómodamente contra GCP desde cualquier navegador web y cualquier S.O.
 
-En cualquier caso, en general evita usar el usuario `root` salvo que sea estrictamente necesario, para no generar problemas de permisos sobre los archivos y carpetas cuando uses un usuario distinto de `root`. Por tanto, utiliza `sudo` delante de los comandos cuando requieras permisos de administrador, pero evita hacerlo de forma predeterminada (evita `sudo su`).
-====
+A continuación se explican las herramientas que debes configurar si estás usando tu máquina local, aunque probablemente algunas ya las tendrás instaladas. Si optas por trabajar en Cloud Shell, seguramente también estarán ya instaladas.
+
+CAUTION: En general evita usar el usuario `root` salvo que sea estrictamente necesario, para no generar problemas de permisos sobre los archivos y carpetas cuando estés usando un usuario distinto de `root`. 
+
+TIP: Utiliza `sudo` delante de los comandos estrictamente cuando requieras permisos de administrador, pero evita hacerlo de forma predeterminada (evita `sudo su`).
 
 Para comenzar a trabajar, será necesario tener instalados en la máquina local las siguientes herramientas: Terraform, Google Cloud CLI. Se presupone que ya se tiene instalado un entorno de desarrollo como Visual Studio Code, y una pareja de claves SSH personal en la carpeta `HOME` del usuario (`~`).
 
