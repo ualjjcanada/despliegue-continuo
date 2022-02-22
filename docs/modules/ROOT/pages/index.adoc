@@ -3,6 +3,7 @@ Nombre y título del trabajo
 ////
 = Despliegue continuo con Jenkins
 :navtitle: Introducción
+:example-caption!:
 
 ////
 COLOCA A CONTINUACION LOS OBJETIVOS
