@@ -1,17 +1,18 @@
+// Entrar en modo numerado de apartados
+:numbered:
+
+= Prerrequisitos
+
 [IMPORTANT]
 ====
 Para realizar las actividades propuestas, como van a ser conectar a las instancias en GCP, lanzar Terraform, lanzar contenedores Docker, etc, puedes usar distintas formas. Dependiendo del sistema operativo de tu máquina local, te recomiendo los siguientes alternativas:
+
 - Windows: es recomendable usar un terminal basado en Linux, por ejemplo *Git Bash* (https://git-scm.com).
 - Linux y Mac: el *terminal del S.O* incluye todo lo necesario.
 - Cloud Shell de Google Cloud: la consola web de Google Cloud proporciona la herramienta *Cloud Shell* que permite trabajar cómodamente contra GCP desde cualquier navegador web y cualquier S.O.
 
 En cualquier caso, en general evita usar el usuario `root` salvo que sea estrictamente necesario, para no generar problemas de permisos sobre los archivos y carpetas cuando uses un usuario distinto de `root`. Por tanto, utiliza `sudo` delante de los comandos cuando requieras permisos de administrador, pero evita hacerlo de forma predeterminada (evita `sudo su`).
 ====
-
-// Entrar en modo numerado de apartados
-:numbered:
-
-= Prerrequisitos
 
 Para comenzar a trabajar, será necesario tener instalados en la máquina local las siguientes herramientas: Terraform, Google Cloud CLI. Se presupone que ya se tiene instalado un entorno de desarrollo como Visual Studio Code, y una pareja de claves SSH personal en la carpeta `HOME` del usuario (`~`).
 
