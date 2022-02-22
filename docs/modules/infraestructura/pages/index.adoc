@@ -1,0 +1,179 @@
+== Creación de la infraestructura en Google Cloud
+
+Utilizando una plantilla de terraform crea 2 instancias de máquina virtuales en tu proyecto en Google Cloud: 
+
+. Instancia para instalar Jenkins mediante un contenedor Docker.
+. Instancia de despliegue (VM Deploy) con Docker y Docker Composer instalados.
+
+.Máquinas virtuales creadas con Terraform
+image::terraform-vm-schema.png[role="thumb", align="center"]
+
+Para crearlas, utiliza la plantilla de terraform disponible en el repositorio https://github.com/ualcnsa/terraformGoogleCloudSample. 
+En primer lugar realiza un __fork__ del repositorio, para hacer las modificaciones al mismo que sean necesarias. Después modifica las variables correspondientes para usar tu proyecto en la plantilla, tal y como se describe a continuación.
+
+=== Estructura del proyecto terraform
+
+El repositorio consta de tres archivos con extension .tf, y una carpeta con un template para la creación de instancias.
+
+[source,subs="verbatim,quotes"]
+----
+terraformGoogleCloudSample
+├── instance
+│   └── *main.tf* <4>
+├── .gitignore
+├── README.md
+├── *mynetwork.tf* <2>
+├── *output.tf* <3>
+└── *provider.tf* <1>
+----
+<1> Descripción del proveedor sobre el que ejecutar la plantilla, en nuestro caso Google Cloud.
+<2> Plantilla principal. Crea la red, las reglas de firewall, las 2 instancias llamando al __módulo__ `main.tf` de la carpeta `instance`, y por último realiza la inicialización de cada instancia.
+<3> Plantilla con los valores que se muestran de salida al finalizar la ejecución
+<4> Módulo genérico para crear una instancia. Es llamado desde `network.tf` pasándole las variables que necesita para crear la instancia.
+
+El archivo `*provider.tf*` deberás modificarlo:
+
+.provider.tf
+[source, tf]
+----
+# Descargar json con credenciales de aquí:
+# https://console.cloud.google.com/apis/credentials/serviceaccountkey
+# Tras ello definir la variable de entorno apuntando a el json
+# export GOOGLE_CLOUD_KEYFILE_JSON=path/file.json
+
+variable "gcp_project" {
+  # Configurar el nombre del proyecto en GCP
+  default = "cnsa-2021" <1>
+}
+
+provider "google" {
+  project     = "${var.gcp_project}"
+  region      = "us-central1"
+}
+----
+<1> Sustituye este valor por el nombre de tu proyecto (__cnsa2021-abc123__)
+
+Para que terraform pueda conectar al __provider__ Google Cloud desde tu máquina local, debes proporcionar un archivo con credenciales. Descarga el archivo `.json` de aquí: https://console.cloud.google.com/apis/credentials/serviceaccountkey
+
+.Descarga de archivo de credenciales Google Cloud
+image::crear-clave-cuenta-servicio.png[role="thumb", align="center"]
+
+<1> Selecciona el proyecto
+<2> Selecciona la opción __Compute engine__, y pulsa __Crear__
+
+Guarda el archivo .json en tu proyecto. A continuación, en tu terminal define la variable de entorno apuntando a el archivo recién descargado, sustituyendo `path/file.json` por la ruta relativa y el nombre del archivo de credenciales: 
+[source, bash, subs="verbatim,quotes"]
+export GOOGLE_CLOUD_KEYFILE_JSON=*path/file.json*
+
+
+[WARNING]
+====
+Recuerda: *NUNCA subas tu archivo de credenciales json* a un repositorio público como GitHub. Para evitarlo, añade el nombre el archivo de credenciales al *`.gitignore`*. Se recomienda guardar el archivo `.json` en una carpeta llamada `credentials`, porque ya estaría ignorado, puedes verlo en el *`.gitignore`* del repositorio que has forkeado. 
+
+En el archivo de credenciales va tu clave privada que sustituye a tu usuario y contraseña para crear recursos en GCP. Hay robots que continuamente buscan PRIVATE KEYS y API TOKENS en repositorios públicos como GitHub. Si un __hacker__ accede a ese archivo, lo usará para crear servicios hasta gastar tu crédito por completo, fundamentalmente para minar bitcoins.
+====
+
+=== Ejecución de terraform
+.Videotutorial
+****
+Accede al https://drive.google.com/file/d/1_ku2LnVbMmWgns-s8_23ATAQ3nrQEJo2/view?usp=sharing[videotutorial, window="_blank"] explicativo de esta sección (mp4, 20 minutos, 171M).
+
+****
+==== `terraform init`
+Una vez configurado el __provider__ comprueba que la conexión es correcta: en tu terminal, ejecuta el comando `terraform init` para inicializar el proyecto como un proyecto terraform. Si todo es correcto aparecerá un mensaje de éxito.
+
+.`terraform init` correcto
+image::terraform-init-ok.png[role="thumb", align="center"]
+
+Si por el contrario recibes algún mensaje de error, revisa el motivo del error: 
+
+. Terraform puede que no esté accesible. Debería estar en el `PATH`
+. Revisa si la variable de entorno si se ha guardado correctamente, ejecuta `echo $GOOGLE_CLOUD_KEYFILE_JSON` y comprueba que es la ruta y nombre de archivo correctos.
+
+==== `terraform plan`
+
+Ejecuta el comando `terraform plan` para ver el resultado de elementos que se crearán o eliminarán al ejecutar la plantilla. Debe aparecer que se crearán 7 elementos. 
+
+.`terraform plan` correcto
+image::terraform-plan-ok.png[role="thumb", align="center"]
+
+==== `terraform apply`
+
+Ejecuta el comando `terraform apply --auto-approve` para ejecutar la plantilla. Comenzará a crear los 7 elementos definidos en la plantilla. Tardará unos *5 minutos* o incluso más, así que ten paciencia. Sobre todo tardará en ejecutar los bloques de inicialización de las instancias, en las que se actualizan los paquetes, se instala Docker y otros paquetes. En todo momento verás en pantalla el `log` de las operaciones que se están realizando.
+
+Comprueba que las instancias se han creado correctamente en tu proyecto Google Cloud. 
+
+[WARNING]
+====
+*Apaga las instancias* cuando dejes de usarlas, para evitar que consuman crédito. 
+====
+
+==== `terraform destroy`
+
+Cuando desees eliminar todos los recursos que hemos creado con esta plantilla, simplemente ejecuta `terraform destroy`. Por ahora debes simplemente apagar las instancias cuando no las uses, porque las necesitaremos en el resto de la asignatura.
+
+
+== Cloud DNS
+
+[TIP]
+====
+*Este apartado, Cloud DNS, es optativo*. Se evalúa con el 5% de la actividad pero no es obligatorio que lo realices. 
+====
+
+Google Cloud ha asignado una IP pública estática a cada una de tus instancias (la IP no cambiará al apagar la instancia y volver a encenderla). A continuación, vamos a asignar nombres de DNS a esas IPs con Cloud DNS y uno de los servicios de DNS disponibles en el Student Pack de GitHub. 
+
+=== Alta de nombre de dominio
+
+GitHub Student pack ofrece varios servicios de nombres dominios gratuitos durante 1 año. Puedes usar __name.com__, __namecheap__, o __.tech domains__. En uno de ellos vamos a dar de alta un nombre de dominio para nuestras instancias en Google Cloud. Voy a describir cómo hacerlo con *.tech*. 
+
+Accede a https://get.tech/github-student-developer-pack[get.tech] y prueba un nombre de dominio que te guste y que esté disponible. 
+
+.Comprobar si el dominio está disponible en get.tech
+image::tech-domain-disponible.png[role="thumb", align="center"]
+
+A continuación, inicia sesión con tu cuenta de github, y verás que tienes el descuento por un año. Procede a la compra gratuita. Además, tendrás que registrarte para poder acceder posteriormente a la configuración. Debes completar los datos de registro ya que te identifican como propietario del nombre de dominio. Si lo deseas, usa como dirección __Universidad de Almería, Ctra. Sacramento s/n, 04120, Almería, Spain__. 
+
+=== Configuración de nombres de dominio
+
+Para configurar el nombre de dominio que acabas de adquirir a las IPs reservadas, debes usar Cloud DNS en Google Cloud. Cloud DNS permite asignar los nombres de dominio a las direcciones IP públicas de las instancias. Recuerda comprobar que las IPs son estáticas.
+
+. En el menú de la consola de Google Cloud, entra en *Servicios de red*, *Cloud DNS*.
+
+.Cloud DNS
+image::cloud-dns.png[role="thumb", 360, align="center"]
+
+[start=2]
+. Haz clic en *Crear Zona*.
+
+.Cloud DNS, crear zona
+image::cloud-dns-crear-zona.png[role="thumb", align="center"]
+
+[start=3]
+. A continuación, haz clic en *Añadir Conjunto de registros*. Para cada instancia, crea un conjunto de registros.
+
+.Cloud DNS. Crear conjunto de registros, instancia Jenkins
+image::cloud-dns-crear-conjunto-de-registros.png[role="thumb", align="center"]
+
+.Cloud DNS. Crear conjunto de registros, instancia de despliegue de apps
+image::cloud-dns-crear-conjunto-de-registros2.png[role="thumb", align="center"]
+
+Tras la creación, debes tener un resultado similar a este: 
+
+.Cloud DNS. Detalles de la Zona
+image::cloud-dns-detalles-zona.png[role="thumb", align="center"]
+
+
+[start=4]
+. El último paso será modificar los servidores de DNS de la configuración en la web .tech, para poner los valores de los servidores de Google Cloud. Para ello, inicia sesión en get.tech. Entra en tu pedido. 
+
+.get.tech. Acceso al pedido
+image::get-tech-manage-orders.png[role="thumb", align="center"]
+
+[start=5]
+. Modifica los nombres de los servidores con los valores de tu zona en Cloud DNS
+
+.get.tech. Nombres de los servidores
+image::get-tech-manage-servers.png[role="thumb", align="center"]
+
+[start=6]
+. Guarda los cambios. Hasta *pasadas 24 horas* no estarán disponibles.

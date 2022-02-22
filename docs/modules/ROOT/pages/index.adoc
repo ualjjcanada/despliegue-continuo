@@ -1,0 +1,19 @@
+////
+Nombre y título del trabajo
+////
+= Despliegue continuo con Jenkins
+
+. link:docs/cicd-jenkins.html[Despliegue continuo con Jenkins]
+
+////
+COLOCA A CONTINUACION LOS OBJETIVOS
+////
+.Objetivos
+* Crear una infraestructura de CI/CD en GCP con Máquinas Virtuales gestionadas con Terraform
+* Diseñar proyectos Jenkins para la construcción y despliegue automatizado de aplicaciones en Java y NodeJs
+
+.Realización y entrega
+****
+La realización de estas actividades se realizará de forma **individual**. Serán la base para actividades posteriores que ser harán en equipo. 
+La entrega será mediante el envío de un informe y el acceso al profesor a los servicios configurados por cada estudiante, para la revisión y evaluación de los mismos. 
+****

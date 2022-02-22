@@ -1,0 +1,61 @@
+[IMPORTANT]
+====
+Para realizar las actividades propuestas, como van a ser conectar a las instancias en GCP, lanzar Terraform, lanzar contenedores Docker, etc, puedes usar distintas formas. Dependiendo del sistema operativo de tu máquina local, te recomiendo los siguientes alternativas:
+- Windows: es recomendable usar un terminal basado en Linux, por ejemplo *Git Bash* (https://git-scm.com).
+- Linux y Mac: el *terminal del S.O* incluye todo lo necesario.
+- Cloud Shell de Google Cloud: la consola web de Google Cloud proporciona la herramienta *Cloud Shell* que permite trabajar cómodamente contra GCP desde cualquier navegador web y cualquier S.O.
+
+En cualquier caso, en general evita usar el usuario `root` salvo que sea estrictamente necesario, para no generar problemas de permisos sobre los archivos y carpetas cuando uses un usuario distinto de `root`. Por tanto, utiliza `sudo` delante de los comandos cuando requieras permisos de administrador, pero evita hacerlo de forma predeterminada (evita `sudo su`).
+====
+
+// Entrar en modo numerado de apartados
+:numbered:
+
+== Prerrequisitos
+
+Para comenzar a trabajar, será necesario tener instalados en la máquina local las siguientes herramientas: Terraform, Google Cloud CLI. Se presupone que ya se tiene instalado un entorno de desarrollo como Visual Studio Code, y una pareja de claves SSH personal en la carpeta `HOME` del usuario (`~`).
+
+[source,subs="verbatim,quotes"]
+----
+~/.ssh/
+├── id_rsa <1>
+└── id_rsa.pub <2>
+----
+<1> clave privada
+<2> clave pública
+
+Además, se debe disponer de crédito en GCP, proporcionado por el profesor, y darse de alta en Github Student Education Pack. A continuación se describen en detalle estos requisitos previos.
+
+=== Cupones educativos Google Cloud
+
+Si ya dispones de crédito en GCP, podrás usarlo ahora. En cualquier caso, para esta asignatura disponemos de un nuevo cupón educativo de 50$ por estudiante, que no necesita tarjeta de crédito para su activación. Actívalo en la dirección que habrá recibido en tu email, usando tu email __@inlumine.ual.es__.
+
+*Crea un nuevo proyecto* GCP con el nombre *cnsa2021-__abc123__* (sustituyendo __abc123__ por tu nombre de usuario), y dale permisos al profesor. Para ello, revisa las instrucciones que vimos en la asignatura del primer cuatrimestre. El crédito del cada cupón dura 12 meses, así que este nuevo proyecto asígnalo a la cuenta de facturación de la asignatura del primer cuatrimestre, ya que es mejor consumir ese crédito porque caduca antes. Si se consume el crédito del primer cupón, simplemente tendrás que cambiar tu proyecto *cnsa2021-__abc123__* a la nueva cuenta de facturación del nuevo cupón.
+
+=== Terraform
+
+Terraform es una aplicación que se distribuye en un único archivo ejecutable. Las instrucciones de instalación de Terraform está disponibles https://learn.hashicorp.com/terraform/getting-started/install.html[aquí].
+
+En Windows se recomienda instalarlo con https://chocolatey.org/docs/installation[Chocolatey]. Así que si previamente has instalado Chocolatey, simplemente abre una ventana de comandos (cmd) con *permiso de administrador* y ejecuta: 
+
+[source,bash]
+----
+choco install terraform -y
+----
+
+=== GCloud CLI para  GCP
+
+Google Cloud Command Line Interface está disponible para su instalación https://cloud.google.com/sdk/install[aquí].
+
+En Windows se recomienda instalarlo con Chocolatey: abre una ventana de comandos (cmd) con *permiso de administrador* y ejecuta: 
+
+[source,bash]
+----
+choco install gcloudsdk -y
+----
+
+=== Github Student Education Pack
+
+Para poder usar servicios adicionales, como DNS gratuito, debes darte de alta en https://education.github.com/pack[Github Student Education Pack].
+
+Si ya dispones de una cuenta de GitHub, y no quieres crear una cuenta nueva, simplemente debes añadir tu email __@inlumine.ual.es__ a la lista de emails de tu cuenta actual. Para ello, sigue las https://help.github.com/en/github/setting-up-and-managing-your-github-user-account/adding-an-email-address-to-your-github-account[instrucciones]. Tras añadir tu email, haz clic en el enlace https://education.github.com/pack[Get the pack].
