@@ -6,7 +6,7 @@ Nombre y título del trabajo
 
 Computación en la nube servicios y aplicaciones. Joaquín Cañadas <jjcanada@ual.es>
 
-Version *{page-component-display-version}*
+_Version *{page-component-display-version}*_
 
 
 ////
