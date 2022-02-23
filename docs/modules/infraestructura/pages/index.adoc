@@ -150,7 +150,16 @@ image::terraform-plan-ok.png[role="thumb", align="center"]
 
 Ejecuta el comando `terraform apply --auto-approve` para ejecutar la plantilla. Comenzará a crear los 7 elementos definidos en la plantilla. Tardará unos *5 minutos* o incluso más, así que ten paciencia. Sobre todo tardará en ejecutar los bloques de inicialización de las instancias, en las que se actualizan los paquetes, se instala Docker y otros paquetes. En todo momento verás en pantalla el `log` de las operaciones que se están realizando.
 
-Comprueba que las instancias se han creado correctamente en tu proyecto Google Cloud. 
+[WARNING]
+====
+Si la primera vez que aplicas el plan aparece un mensaje de error`[red]#Error:# ... Error 403: Compute Engine API has not been used in project...` es debido a que aun no se ha  activado la API de Compute Engine  en el proyecto. Haz clic en el enlace del error y activa la API. Espera un par de minutos y vuelve a lanzar terraform.
+
+.Habilitar la API de Compute Engine
+image::habilitar-ComputeEngineAPI.png[role="thumb", align="center"]
+
+====
+
+Tras la ejecución, comprueba que las instancias se han creado correctamente en tu proyecto Google Cloud. 
 
 [WARNING]
 ====
