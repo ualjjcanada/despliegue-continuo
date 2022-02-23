@@ -1,14 +1,3 @@
-:figure-caption: Fig.
-:encoding: utf-8
-:lang: es
-////
-/// activar btn:
-////
-:experimental:
-
-:source-highlighter: rouge
-:rouge-linenums-mode: inline
-
 = Creación de la infraestructura en Google Cloud
 
 Utilizando una plantilla de terraform crea 2 instancias de máquina virtuales en tu proyecto en Google Cloud: 
