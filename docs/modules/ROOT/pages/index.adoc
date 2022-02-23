@@ -4,6 +4,10 @@ Nombre y título del trabajo
 = Despliegue continuo con Jenkins
 :navtitle: Introducción
 
+Computación en la nube servicios y aplicaciones
+Version *{page-component-display-version}*
+Joaquín Cañadas <jjcanada@ual.es>
+
 ////
 COLOCA A CONTINUACION LOS OBJETIVOS
 ////
