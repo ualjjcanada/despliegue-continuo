@@ -13,11 +13,12 @@ Utilizando una plantilla de terraform crea 2 instancias de máquina virtuales en
 .Máquinas virtuales creadas con Terraform
 image::terraform-vm-schema.png[role="thumb", align="center"]
 
-Para crearlas, utiliza la plantilla de terraform disponible en el repositorio https://github.com/ualcnsa/terraformGoogleCloudSample. 
-En primer lugar realiza un __fork__ del repositorio, para hacer las modificaciones al mismo que sean necesarias. Después modifica las variables correspondientes para usar tu proyecto en la plantilla, tal y como se describe a continuación.
 ====
 
 == Estructura del proyecto terraform
+
+Para crear las instancias, utiliza la plantilla de terraform disponible en el repositorio https://github.com/ualcnsa/terraformGoogleCloudSample. 
+En primer lugar realiza un __fork__ del repositorio, para hacer las modificaciones al mismo que sean necesarias. Después, sobre tu __fork__, modifica las variables correspondientes para usar tu proyecto en la plantilla, tal y como se describe a continuación.
 
 El repositorio consta de tres archivos con extension .tf, y una carpeta con un template para la creación de instancias.
 
@@ -49,34 +50,76 @@ El archivo `*provider.tf*` deberás modificarlo:
 
 variable "gcp_project" {
   # Configurar el nombre del proyecto en GCP
-  default = "cnsa-2021" <1>
+  default = "cnsa-2022" <1>
+}
+
+terraform {
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "4.11.0"
+    }
+  }
 }
 
 provider "google" {
-  project     = "${var.gcp_project}"
-  region      = "us-central1"
+  project = var.gcp_project
+  region  = "us-central1"
+  zone    = "us-central1-c"
 }
+
 ----
-<1> Sustituye este valor por el nombre de tu proyecto (__cnsa2021-abc123__)
+<1> Sustituye este valor por el nombre de tu proyecto (__cnsa2022-abc123__)
 
 Para que terraform pueda conectar al __provider__ Google Cloud desde tu máquina local, debes proporcionar un archivo con credenciales. Descarga el archivo `.json` de aquí: https://console.cloud.google.com/apis/credentials/serviceaccountkey
 
-.Descarga de archivo de credenciales Google Cloud
+.Creación del archivo de credenciales Google Cloud
 image::crear-clave-cuenta-servicio.png[role="thumb", align="center"]
 
 <1> Selecciona el proyecto
-<2> Selecciona la opción __Compute engine__, y pulsa __Crear__
+<2> Selecciona __Crear Cuenta de Servicio__
 
-Guarda el archivo .json en tu proyecto. A continuación, en tu terminal define la variable de entorno apuntando a el archivo recién descargado, sustituyendo `path/file.json` por la ruta relativa y el nombre del archivo de credenciales: 
+Da un nombre a la cuenta de servicio, y pulsa __Crear y Continuar__
+
+.Propiedades del archivo de credenciales Google Cloud
+image::crear-clave-cuenta-servicio2.png[role="thumb", align="center"]
+
+Selecciona el role _Administrador de Compute Engine_, y pulsa __Continuar__
+
+.Rol de administrador de la cuenta de servicio
+image::crear-clave-cuenta-servicio3.png[role="thumb", align="center"]
+
+Deja en blanco los siguiente campos, y pulsa _Listo_.
+
+A continuación, accede a la cuenta de servicio recien creada: 
+
+.Detalles de la nueva cuenta de servicio
+image::crear-clave-cuenta-servicio4.png[role="thumb", align="center"]
+
+Ve a la pestaña __Claves__, __Agregar Claves__, __Crear nueva Clave__.
+
+.Nueva clave de cuenta de servicio
+image::crear-clave-cuenta-servicio5.png[role="thumb", align="center"]
+
+.Nueva clave de cuenta de servicio JSON
+image::crear-clave-cuenta-servicio6.png[role="thumb", align="center"]
+
+.Nueva clave descargada
+image::crear-clave-cuenta-servicio7.png[role="thumb", align="center"]
+
+Guarda el archivo .json en la carpeta `credentials` del proyecto terraform. A continuación, en tu terminal define la variable de entorno apuntando a el archivo recién descargado, sustituyendo `path/file.json` por la ruta relativa y el nombre del archivo de credenciales: 
 [source, bash, subs="verbatim,quotes"]
 export GOOGLE_CLOUD_KEYFILE_JSON=*path/file.json*
 
 
-[WARNING]
+[TIP]
 ====
 Recuerda: *NUNCA subas tu archivo de credenciales json* a un repositorio público como GitHub. Para evitarlo, añade el nombre el archivo de credenciales al *`.gitignore`*. Se recomienda guardar el archivo `.json` en una carpeta llamada `credentials`, porque ya estaría ignorado, puedes verlo en el *`.gitignore`* del repositorio que has forkeado. 
+====
 
-En el archivo de credenciales va tu clave privada que sustituye a tu usuario y contraseña para crear recursos en GCP. Hay robots que continuamente buscan PRIVATE KEYS y API TOKENS en repositorios públicos como GitHub. Si un __hacker__ accede a ese archivo, lo usará para crear servicios hasta gastar tu crédito por completo, fundamentalmente para minar bitcoins.
+[WARNING]
+====
+En el archivo de credenciales va tu *clave privada* que sustituye a tu usuario y contraseña para crear recursos en GCP. Hay *robots* que continuamente analizan repositorios públicos de  GitHub buscando PRIVATE KEYS y API TOKENS. Si un __hacker__ accede a ese archivo, lo usará para crear servicios hasta agotar tu crédito por completo, fundamentalmente para *minar bitcoins*.
 ====
 
 == Ejecución de terraform
