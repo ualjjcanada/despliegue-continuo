@@ -28,6 +28,43 @@ Para comenzar a trabajar, será necesario tener instalados en la máquina local 
 <1> clave privada
 <2> clave pública
 
+[TIP]
+====
+Recuerda que `~/` hace referencia la carpeta HOME del usuario en la máquina local:
+
+- En Windows: `C:\Users\USUARIO`
+- En Mac: `/Users/USUARIO`
+- En Linux: `/home/USUARIO`
+====
+
+.Creación de pareja de claves SSH
+====
+Si aun no tienes pareja de claves SSH, ejecuta el siguiente comando en tu terminal para crear una nueva pareja de claves SSH, usando el email como etiqueta:
+```
+$ ssh keygen t rsa b 4096 C "your_email@inlumine.ual.es" 
+```
+
+Cuando te pregunte `Enter a file in which to save the key` presiona Enter para aceptar el nombre de archivo predeterminado (`id_rsa`)
+```
+Enter a file in which to save the key (/c/Users/you/.ssh id_rsa): [Press enter]
+```
+
+A continuación te pedirá una contraseña o `passphrase`, de nuevo presiona Enter.
+```
+Enter passphrase (empty for no passphrase): [Press enter]
+```
+
+Presiona Enter de nuevo: 
+```
+Type passphrase again: [Press enter]
+```
+
+Consulta si la pareja de claves se ha creado correctamente:
+```
+ls al ~/. ssh
+```
+====
+
 Además, se debe disponer de crédito en GCP, proporcionado por el profesor, y darse de alta en Github Student Education Pack. A continuación se describen en detalle estos requisitos previos.
 
 == Cupones educativos Google Cloud
