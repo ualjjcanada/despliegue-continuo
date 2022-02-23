@@ -1,5 +1,10 @@
 = Creación de la infraestructura en Google Cloud
 
+////
+COLOCA A CONTINUACION LOS OBJETIVOS
+////
+.Objetivos
+====
 Utilizando una plantilla de terraform crea 2 instancias de máquina virtuales en tu proyecto en Google Cloud: 
 
 . Instancia para instalar Jenkins mediante un contenedor Docker.
@@ -10,6 +15,7 @@ image::terraform-vm-schema.png[role="thumb", align="center"]
 
 Para crearlas, utiliza la plantilla de terraform disponible en el repositorio https://github.com/ualcnsa/terraformGoogleCloudSample. 
 En primer lugar realiza un __fork__ del repositorio, para hacer las modificaciones al mismo que sean necesarias. Después modifica las variables correspondientes para usar tu proyecto en la plantilla, tal y como se describe a continuación.
+====
 
 == Estructura del proyecto terraform
 
