@@ -173,11 +173,6 @@ Cuando desees eliminar todos los recursos que hemos creado con esta plantilla, s
 
 == Cloud DNS
 
-[TIP]
-====
-*Este apartado, Cloud DNS, es optativo*. Se evalúa con el 15% de la actividad pero no es obligatorio que lo realices. 
-====
-
 Google Cloud ha asignado una IP pública estática a cada una de tus instancias (la IP no cambiará al apagar la instancia y volver a encenderla). A continuación, vamos a asignar nombres de DNS a esas IPs con Cloud DNS y uno de los servicios de DNS disponibles en el Student Pack de GitHub. 
 
 === Alta de nombre de dominio
