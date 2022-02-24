@@ -73,7 +73,10 @@ provider "google" {
 
 == Creación de la clave para la Cuenta de servicio
 
-Para que terraform pueda conectar al __provider__ Google Cloud desde tu máquina local, debes proporcionar clave para la Cuenta de servicio. Descarga el archivo `.json` de aquí: https://console.cloud.google.com/apis/credentials/serviceaccountkey
+Para que terraform pueda conectar al __provider__ Google Cloud desde tu máquina local, debes proporcionar clave para la Cuenta de servicio. 
+
+* Seleccionar el proyecto Google Cloud.
+* En el menú de navegación seleccionar `IAM y administración | Cuentas de servicio`.
 
 .Creación del archivo de credenciales Google Cloud
 image::crear-clave-cuenta-servicio.png[role="thumb", align="center"]
@@ -81,12 +84,12 @@ image::crear-clave-cuenta-servicio.png[role="thumb", align="center"]
 <1> Selecciona el proyecto
 <2> Selecciona __Crear Cuenta de Servicio__
 
-Da un nombre a la cuenta de servicio, y pulsa __Crear y Continuar__
+Da un nombre a la cuenta de servicio (p.e. `terraform`), y pulsa __Crear y Continuar__
 
 .Propiedades del archivo de credenciales Google Cloud
 image::crear-clave-cuenta-servicio2.png[role="thumb", align="center"]
 
-Selecciona el role _Administrador de Compute Engine_, y pulsa __Continuar__
+Selecciona el rol _Administrador de Compute Engine_ (también es suficiente con `Proyecto -> Editor`), y pulsa __Continuar__
 
 .Rol de administrador de la cuenta de servicio
 image::crear-clave-cuenta-servicio3.png[role="thumb", align="center"]
@@ -103,8 +106,12 @@ Ve a la pestaña __Claves__, __Agregar Claves__, __Crear nueva Clave__.
 .Nueva clave de cuenta de servicio
 image::crear-clave-cuenta-servicio5.png[role="thumb", align="center"]
 
+Dejar `JSON` en el tipo de clave.
+
 .Nueva clave de cuenta de servicio JSON
 image::crear-clave-cuenta-servicio6.png[role="thumb", align="center"]
+
+Seleccionar `Crear`. A continuación se descargará la clave privada.
 
 .Nueva clave descargada
 image::crear-clave-cuenta-servicio7.png[role="thumb", align="center"]
