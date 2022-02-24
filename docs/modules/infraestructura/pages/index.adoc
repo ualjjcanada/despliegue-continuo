@@ -71,6 +71,8 @@ provider "google" {
 ----
 <1> Sustituye este valor por el nombre de tu proyecto (__cnsa2022-abc123__)
 
+== Creación de la clave para la Cuenta de servicio
+
 Para que terraform pueda conectar al __provider__ Google Cloud desde tu máquina local, debes proporcionar clave para la Cuenta de servicio. Descarga el archivo `.json` de aquí: https://console.cloud.google.com/apis/credentials/serviceaccountkey
 
 .Creación del archivo de credenciales Google Cloud
