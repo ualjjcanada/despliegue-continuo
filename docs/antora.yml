@@ -6,4 +6,4 @@ nav:
 - modules/ROOT/nav.adoc
 - modules/prerrequisitos/nav.adoc
 - modules/infraestructura/nav.adoc
-- modules/jenkins-docker-instalacion/nav.doc
+- modules/jenkinsdockerinstalacion/nav.doc
