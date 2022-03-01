@@ -1,6 +1,13 @@
 = Instalación de Jenkins
 
-Vamos a usar la primera instancia para instalar Jenkins. En lugar de realizar una https://ualhmis.github.io/Jenkins2Instalacion/[instalación completa sobre el sistema operativo], utilizando los paquetes de Ubuntu, tal como se hace en la asignatura Herramientas y Métodos de Ingeniería del Software, de 3º del Grado en Ingeniería Informática, aquí vas a desplegar Jenkins como un contenedor de  docker. 
+////
+COLOCA A CONTINUACION LOS OBJETIVOS
+////
+.Objetivos
+====
+Vamos a usar la primera instancia para instalar Jenkins. En lugar de realizar una https://ualhmis.github.io/Jenkins2Instalacion/[instalación completa sobre el sistema operativo], utilizando los paquetes de Ubuntu, tal como se hace en la asignatura Herramientas y Métodos de Ingeniería del Software, de 3º del Grado en Ingeniería Informática, aquí vas a desplegar Jenkins como un contenedor de Docker. 
+
+====
 
 == Construcción de la imagen del contenedor Jenkins
 
@@ -10,19 +17,3 @@ Por tanto, vamos a crear una imagen personalizada del contenedor de Jenkins bas�
 Lo más adecuado es que construyas la imagen de Jenkins con Docker en la propia máquina donde lo vamos a ejecutar, es decir en la instancia de jenkins. 
 
 Conecta por ssh a la instancia de jenkins. Recuerda que el usuario de la instancia es `ubuntu`. Por tanto, la conexión a la misma  consistiría en ejecutar desde el terminal el comando `ssh ubuntu@MAQUINA_JENKINS`, sustituyendo MAQUINA_JENKINS por la IP o el nombre DNS de la misma. 
-
-[WARNING]
-====
-Si utilizas la shell de la consola web de Google Cloud para conectar por ssh a la máquina, verás que estarás conectado como tu usuario de la UAL, del tipo `abc123`. En este caso RECUERDA sustituir `ubuntu` por tu usuario `abc123` en todos los comandos y ejemplos de este documento.
-====
-
-[IMPORTANT]
-====
-Realiza las actividades conectando a las instancias bien con el usuario `ubuntu` de la máquina, o bien si usas la shell de la consola web de Google Cloud, con tu usuario de la UAL (del tipo `abc123`). *Se consistente*, es decir, hazlo siempre con el mismo usuario. Se *DESACONSEJA* ejecutar los comandos como `root` mediante `sudo su`. Solamente en caso de que sea absolutamente necesario, ejecuta los comandos con `sudo` delante para tener permisos de `root` puntualmente. Si haces las actividades como `root`, tendrás problemas de permisos de acceso los archivos y carpetas, como por ejemplo a las claves SSH.
-====
-
-[WARNING]
-====
-Prueba que docker se ejecuta correctamente. Si la ejecución de `docker ps -a` te da error, prueba a ejecutarlo con `sudo`. Para evitar tener que escribir siempre `sudo` delante de cualquier comando `docker`, ejecuta: `sudo usermod -aG docker $USER`. Tras ello, reinicia la sesión. Prueba ahora sin `sudo`, a partir de ahora llama siempre a docker sin `sudo`. Más info https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user[aquí]
-====
-
