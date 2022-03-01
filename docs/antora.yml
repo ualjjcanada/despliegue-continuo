@@ -4,7 +4,7 @@ version: 0.22
 # prerelease: -beta.1
 nav:
 - modules/ROOT/nav.adoc
-- modules/jenkinsdocker/nav.doc
+- modules/jenkinsdocker/nav.adoc
 - modules/infraestructura/nav.adoc
 - modules/prerrequisitos/nav.adoc
 
