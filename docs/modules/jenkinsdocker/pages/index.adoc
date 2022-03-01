@@ -1,4 +1,5 @@
 = Instalación de Jenkins
+:navtitle: Instalación de Jenkins
 
 ////
 COLOCA A CONTINUACION LOS OBJETIVOS
