@@ -1,4 +1,5 @@
 = Instalación de Jenkins
+:navtitle: Instalación de Jenkins
 
 Vamos a usar la primera instancia para instalar Jenkins. En lugar de realizar una https://ualhmis.github.io/Jenkins2Instalacion/[instalación completa sobre el sistema operativo], utilizando los paquetes de Ubuntu, tal como se hace en la asignatura Herramientas y Métodos de Ingeniería del Software, de 3º del Grado en Ingeniería Informática, aquí vas a desplegar Jenkins como un contenedor de  docker. 
 
