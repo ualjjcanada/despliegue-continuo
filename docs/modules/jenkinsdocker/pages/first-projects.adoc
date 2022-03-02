@@ -1,6 +1,6 @@
 = Primeros ejemplos
 
-== Creación del primer proyecto Jenkins
+== Creación del primer proyecto freestyle
 
 Creamos el primer proyecto de Jenkins. Comprueba que Jenkins puede llamar a docker. Para ello crea un nuevo proyecto tipo freestyle.
 
@@ -17,7 +17,7 @@ java -version
 docker -v
 ----
 
-Guarda los cambios. Haz clic sobre *Build now*. Haz clic sobre la bolita azul para ver el la salida por consola.
+Guarda los cambios. Haz clic sobre *Build now*. Haz clic sobre la bolita verde para ver el la _salida por consola_.
 
 .Build now. Resultado del build
 image::jenkins-new-hello-docker-console-output.png[role="thumb", align="center"]
@@ -27,17 +27,20 @@ image::jenkins-new-hello-docker-console-success.png[role="thumb", align="center"
 
 Por consola se visualiza el resultado de ejecutar los comandos dentro del contenedor. Como puedes ver, `git` y `java` están instalados, venían ya en la imagen de jenkins:lts de la que hemos partido en la definición del Dockerfile. Además, `docker` también está disponible, se ha instalado correctamente mediante la definición incluida en el Dockerfile.
 
-== Creación del primer pipeline en Jenkins
+== Creación del primer pipeline
 
-Creamos el primer proyecto de Jenkins tipo pipeline. 
-Podemos ejecutarlo sobre el nodo master.
+=== Pipeline sobre el nodo master
+
+Creamos el primer proyecto de Jenkins tipo pipeline. Vamos a darle el nombre `hello-maven-pipeline-on-master-node`. Este pipeline se ejecutará sobre el nodo (`agent`) master, es decir, sobre el mismo contenedor que está ejecutando Jenkins. 
+
+Copia la siguiente definición de pipeline en el bloque *Pipeline*, *Pipeline script*.
 
 [source,bash,subs="verbatim,quotes"]
 ----
 pipeline {
     agent any
     tools {
-        maven 'Default Maven'
+        maven 'Default Maven' <1>
     }
 
     stages {
@@ -45,15 +48,38 @@ pipeline {
             steps {
                 sh '''
                     java -version
-                    mvn -v
-                  '''
+                    mvn -v 
+                  ''' <2>
             }
         }
     }
 }
 ----
+<1> Utiliza la instalación de Maven que hemos hecho en la sección anterior, y le dimos el nombre `Default Maven`.
+<2> En la shell ejecutará los comandos para mostrar las versiones de Java y Maven.
 
-Y la otra alternativa es que el pipeline se ejecute en un contenedor docker que descargará de DockerHub.
+Haz clic sobre *Build now*, y visualiza la consola. Como parte de la salida, se debe visualizar algo así (puede que los números de versiones varíen): 
+
+[source,bash,subs="verbatim,quotes"]
+----
+[Pipeline] sh
++ java -version
+openjdk version "11.0.14" 2022-01-18
+OpenJDK Runtime Environment Temurin-11.0.14+9 (build 11.0.14+9)
+OpenJDK 64-Bit Server VM Temurin-11.0.14+9 (build 11.0.14+9, mixed mode)
++ mvn -v
+Apache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537)
+Maven home: /var/jenkins_home/tools/hudson.tasks.Maven_MavenInstallation/Default_Maven
+Java version: 11.0.14, vendor: Eclipse Adoptium, runtime: /opt/java/openjdk
+Default locale: en, platform encoding: UTF-8
+OS name: "linux", version: "5.11.0-1029-gcp", arch: "amd64", family: "unix"
+----
+
+=== Pipeline con un contenedor como agente
+
+Otra alternativa es que el pipeline se ejecute, en lugar de en el nodo master, en un nodo tipo "agente" que se creará _ex profeso_ a partir de un contenedor Docker disponible de DockerHub. 
+
+A continuación creamos el segundo proyecto de Jenkins tipo pipeline. Vamos a darle el nombre `hello-maven-pipeline-on-container-node`
 
 
 [source,bash,subs="verbatim,quotes"]
@@ -78,6 +104,8 @@ pipeline {
 }
 ----
 <1> Entre las https://hub.docker.com/_/maven[imágenes de Maven] disponibles están `3.6-openjdk-11`, `3.6-openjdk-15`, etc
+
+Otros ejemplos similares con contenedores NodeJS, y usando varios contenedores en un mismo proyecto, están disponibles en la https://www.jenkins.io/doc/book/pipeline/docker/[documentación de Jenkins]
 
 == Conexión con la máquina de despliegue
 
