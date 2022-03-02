@@ -75,6 +75,14 @@ Default locale: en, platform encoding: UTF-8
 OS name: "linux", version: "5.11.0-1029-gcp", arch: "amd64", family: "unix"
 ----
 
+[WARNING]
+====
+Lanzar las construcciones de proyectos en el nodo máster puede acarrear problemas de seguridad. De hecho, Jenkins avisa de que esta configuración es inadecuada, y recomienda configurar agentes independientes donde lanzar las ejecuciones de los proyectos.
+
+.Aviso de evitar ejecuciones en el nodo máster de Jenkins
+image::issue-build-on-master.png[role="thumb", align="center"]
+====
+
 === Pipeline con un contenedor como agente
 
 Otra alternativa es que el pipeline se ejecute, en lugar de en el nodo master, en un nodo tipo "agente" que se creará _ex profeso_ a partir de un contenedor Docker disponible de DockerHub. 
