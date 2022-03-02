@@ -130,8 +130,36 @@ $ ls -la /var/run/docker.sock
 srw-rw-rw- 1 root docker 0 Mar  2 19:24 /var/run/docker.sock
 ```
 ====
+=== Pipeline con un contenedor como agente
 
 Otros ejemplos similares con contenedores NodeJS, y usando varios contenedores en un mismo proyecto, están disponibles en la https://www.jenkins.io/doc/book/pipeline/docker/[documentación de Jenkins]
+
+Es habitual tener varias tecnologías en un mismo proyecto. Por ejemplo, un repositorio puede tener tanto un back-end basado en Java como un front-end basado en JavaScript. Combinar Docker y Pipeline permite usar diferentes agentes en diferentes fases (stages) del pipeline: 
+
+[source,bash,subs="verbatim,quotes"]
+----
+pipeline {
+    agent none
+    stages {
+        stage('Back-end') {
+            agent {
+                docker { image 'maven:3.8.1-adoptopenjdk-11' }
+            }
+            steps {
+                sh 'mvn --version'
+            }
+        }
+        stage('Front-end') {
+            agent {
+                docker { image 'node:16.13.1-alpine' }
+            }
+            steps {
+                sh 'node --version'
+            }
+        }
+    }
+}
+----
 
 == Conexión con la máquina de despliegue
 
