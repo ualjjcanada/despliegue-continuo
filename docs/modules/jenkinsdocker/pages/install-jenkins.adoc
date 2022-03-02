@@ -1,0 +1,180 @@
+= Instalación y configuración de Jenkins
+Aquí se describe cómo desplegar Jenkins como un contenedor de Docker.
+
+== Construcción del contenedor Jenkins
+
+La imagen pública del contenedor de Jenkins está disponible en https://hub.docker.com/r/jenkins/jenkins[DockerHub], con el nombre `jenkins/jenkins:lts`. Esta imagen genérica necesita instalarle algunos plugins y herramientas. En concreto, hay que instalarle el propio Docker para permitir que Jenkins ejecute tareas de docker, como por ejemplo `docker build` para construir imágenes de contenedores. Esto es lo que se conoce como https://devopscube.com/run-docker-in-docker/[Docker-in-Docker (dind)]. 
+
+Por tanto, vamos a crear una imagen personalizada del contenedor de Jenkins basándonos en la imagen pública e instalándo Docker dentro del contenedor.
+Lo más adecuado es que construyas la imagen de Jenkins con Docker en la propia máquina donde lo vamos a ejecutar, es decir en la instancia de jenkins. 
+
+Conecta por ssh a la instancia de jenkins. Recuerda que el usuario de la instancia es `ubuntu`. Por tanto, la conexión a la misma  consistiría en ejecutar desde el terminal el comando `ssh ubuntu@MAQUINA_JENKINS`, sustituyendo MAQUINA_JENKINS por la IP o el nombre DNS de la misma. 
+
+[WARNING]
+====
+Si utilizas la shell de la consola web de Google Cloud para conectar por ssh a la máquina, verás que estarás conectado como tu usuario de la UAL, del tipo `abc123`. En este caso RECUERDA sustituir `ubuntu` por tu usuario `abc123` en todos los comandos y ejemplos de este documento.
+====
+
+[IMPORTANT]
+====
+Realiza las actividades conectando a las instancias bien con el usuario `ubuntu` de la máquina, o bien si usas la shell de la consola web de Google Cloud, con tu usuario de la UAL (del tipo `abc123`). *Se consistente*, es decir, hazlo siempre con el mismo usuario. Se *DESACONSEJA* ejecutar los comandos como `root` mediante `sudo su`. Solamente en caso de que sea absolutamente necesario, ejecuta los comandos con `sudo` delante para tener permisos de `root` puntualmente. Si haces las actividades como `root`, tendrás problemas de permisos de acceso los archivos y carpetas, como por ejemplo a las claves SSH.
+====
+
+[WARNING]
+====
+Prueba que docker se ejecuta correctamente. Si la ejecución de `docker ps -a` te da error, prueba a ejecutarlo con `sudo`. Para evitar tener que escribir siempre `sudo` delante de cualquier comando `docker`, ejecuta: `sudo usermod -aG docker $USER`. Tras ello, reinicia la sesión. Prueba ahora sin `sudo`, a partir de ahora llama siempre a docker sin `sudo`. Más info https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user[aquí]
+====
+
+Crea una carpeta `jenkins-docker` y crea el archivo `Dockerfile`. Usa el siguiente Dockerfile (descrito en esta entrada de __medium.com__:  https://medium.com/@gustavo.guss/jenkins-building-docker-image-and-sending-to-registry-64b84ea45ee9[Jenkins Building Docker Image and Sending to Registry].
+
+.Dockerfile
+[source, docker]
+----
+FROM jenkins/jenkins:lts
+
+USER root
+
+RUN apt-get update && \
+apt-get -y install apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg2 \
+    software-properties-common && \
+curl -fsSL https://download.docker.com/linux/$(. /etc/os-release; echo "$ID")/gpg > /tmp/dkey; apt-key add /tmp/dkey && \
+add-apt-repository \
+    "deb [arch=amd64] https://download.docker.com/linux/$(. /etc/os-release; echo "$ID") \
+    $(lsb_release -cs) \
+    stable" && \
+  apt-get update && \
+  apt-get -y install docker-ce
+
+RUN apt-get install -y docker-ce
+
+RUN usermod -a -G docker jenkins
+
+USER jenkins
+----
+
+Construimos la imagen a partir del Dockerfile:
+
+[source,bash,subs="verbatim,quotes"]
+----
+docker build --tag *ualjjcanada*/jenkins-docker:1.0 . <1>
+----
+<1> Sustituye *ualjjcanada/* por tu usuario de Dockerhub si estás registrado, si no simplemente no lo pongas.
+
+.`docker build` de Jenkins con Docker
+image::docker-build-tag.png[role="thumb", align="center"]
+
+.`docker build` successful
+image::docker-build-tag-successfully.png[role="thumb", align="center"]
+
+Comprueba que la imagen ha sido creada, y está disponible en tu máquina: `docker image ls`
+
+.`docker image ls`
+image::docker-image-ls.png[role="thumb", align="center"]
+
+
+== Publicación en Google Container Registry
+
+Opcionalmente podemos publicar nuestra imagen personalizada en DockerHub, o alternativamente el Google Container Registry. Más adelante se describirá cómo hacerlo.
+
+== Ejecución del contenedor de Jenkins
+
+Ejecutamos el contenedor a partir de la imagen creada previamente. 
+
+. Crear una carpeta para `jenkins_home` que configuraremos como volumen para que los datos de Jenkins se guarden fuera del contenedor. 
+
+[source,bash,subs="verbatim,quotes"]
+----
+mkdir ~/jenkins_home
+chmod 777 ~/jenkins_home
+----
+
+[start=2]
+. Ejecutamos el contenedor con `docker run`:
+
+[source,bash,subs="verbatim,quotes"]
+----
+docker run -d --name jenkins-docker -p 80:8080 -p 50000:50000 -v /var/run/docker.sock:/var/run/docker.sock -v ~/jenkins_home:/var/jenkins_home --restart always ualjjcanada/jenkins-docker:1.0
+----
+ 
+Los parámetros de `docker run` son:
+
+* `--name jenkins-docker`: nombre que le asignamos al contenedor
+
+* `-p 80:8080`: jenkins se ejecutará en el puerto 80 en el host, que está mapeado al puerto 8080 del contenedor
+
+* `-v /var/run/docker.sock:/var/run/docker.sock`: volumen para compartir el docker socket (usado en la máquina host) con el contenedor. 
+
+* `-v ~/jenkins_home:/var/jenkins_home`: mapea la carpeta local `~/jenkins_home` con la carpeta `/var/jenkins_home` del contenedor. En el contenedor, la carpeta HOME del usuario _jenkins_ es `/var/jenkins_home`, donde Jenkins guarda todos los archivos que utiliza. Si se tira el contenedor o se actualiza, no se pierden los datos ya que se guardan "fuera" del contenedor. 
+
+* `--restart always`: inicia el contenedor cuando se enciende la instancia.
+
+* `ualjjcanada/jenkins-docker:1.0`: imagen del contenedor a ejecutar, la que hemos construido en el paso anterior.
+
+[start=3]
+. Comprueba que el contenedor está ejecutándose con `docker ps`
+
+.`docker ps`
+image::docker-ps-jenkins.png[role="thumb", align="center"]
+
+
+== Configuración básica de Jenkins 
+
+A continuación se muestran los pasos a realizar en el inicio y configuración básica de Jenkins. Además, se describe la instalación de algunos plugins adicionales.
+
+. Conectamos a la IP/URL de la instancia con el navegador web. Aparecerá la ventana para introducir el password inicial. Para ver el password ejecuta: `cat /home/ubuntu/jenkins_home/secrets/initialAdminPassword`
+
+.Contraseña inicial de Jenkins
+image::jenkins-unlock.png[role="thumb", align="center"]
+
+[start=2]
+. Selecciona Install suggested plugins.
+
+.Install suggested plugins
+image::jenkins-install-suggested-plugins.png[role="thumb", align="center"]
+
+Tras unos minutos, introduce los datos del  usuario administrador de Jenkins. Introduce un nombre de usuario y contraseña.
+
+Acepta el nombre de dominio de la máquina. Si aun no has registrado el nombre de dominio, lo puedes hacer más tarde en la configuración general de Jenkins. 
+
+Jenkins está listo.
+
+.Bienvenida a Jenkins
+image::jenkins-welcome.png[role="thumb", align="center"]
+
+== Instalación de plugins adicionales
+
+Vamos a instalar varios plugins: greenballs, NodeJs, GitHub integration, Docker Pipeline. 
+
+Haz clic en __Manage Jenkins__ > __Manage Plugins__. En la pestaña __Available__ busca __Github integration__, seleccionaló y pulsa en __Download now and install after restart__.
+
+.Instalación del plugin Github integration
+image::jenkins-plugins-github-integration.png[role="thumb", align="center"]
+
+Repite los pasos para los plugins __Green Balls__, __NodeJS__ y __Docker Pipeline__.
+
+.Instalación del plugin NodeJS
+image::jenkins-plugins-nodejs.png[role="thumb", align="center"]
+
+Marca __Restart Jenkins__ para completar la instalación. Tras unos segundos, vuelve a iniciar sesión y tendrás los plugins instalados. 
+
+.Reiniciar para completar la instalación
+image::jenkins-plugins-restart.png[role="thumb", align="center"]
+
+== Configuración las tools en Jenkins
+
+Tras la instalación del plugin https://plugins.jenkins.io/nodejs/[__NodeJS__], es necesario realizar la siguiente configuración: 
+
+. Ve a __Manage Jenkins__, __Global Tool configuration__.
+. En *NodeJS*, añade un instalador. Dale por nombre "nodejs" y marca instalar automáticamente. 
+. Guarda los cambios.
+
+.Configuración de herramienta NodeJS
+image::jenkins-tool-nodejs.png[role="thumb", align="center"]
+
+De la misma forma, instala la última versión de Maven.
+
+.Configuración de herramienta Maven
+image::jenkins-tool-maven.png[role="thumb", align="center"]
