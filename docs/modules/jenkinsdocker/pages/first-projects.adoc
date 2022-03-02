@@ -105,6 +105,32 @@ pipeline {
 ----
 <1> Entre las https://hub.docker.com/_/maven[imágenes de Maven] disponibles están `3.6-openjdk-11`, `3.6-openjdk-15`, etc
 
+Te dará error. En la máquina Jenkins, sobre el S.O. host, hay que abrir permisos en el socket de Docker para que desde dentro del contenedor Jenkins permita crear otros contenedores _hermanos_. Para ello modifica los permisos así:
+```
+sudo chmod 666 /var/run/docker.sock
+```
+Tras ello deben construirse correctamente. Sin embargo, abrir permisos a ese archivo supone ciertos problemas de seguridad: _Avoid workarounds like this which could be a big potential security threat. The result of your chmod practically gives all local users read and write permissions to the docker-socket which allows anyone to interfere with your docker images._ (https://serverfault.com/questions/821062/how-to-run-sudo-chmod-666-var-run-docker-sock-on-ubuntu-before-the-services[fuente]).
+
+[IMPORTANT]
+====
+Para que tras reiniciar la máquina se mantengan los permisos del socket de Docker: 
+
+Crea el archivo `/etc/rc.local`, y añade el siguiente contenido: 
+```
+#!/bin/sh -e
+chmod 666 /var/run/docker.sock
+```
+Por último, dale los permisos adecuados al archivo `/etc/rc.local`: 
+```
+sudo chmod 755 /etc/rc.local
+```
+Tras ello reinicia la máquina. Al volver a entrar, comprueba que el socket de Docker tiene los permisos adecuados:
+```
+$ ls -la /var/run/docker.sock
+srw-rw-rw- 1 root docker 0 Mar  2 19:24 /var/run/docker.sock
+```
+====
+
 Otros ejemplos similares con contenedores NodeJS, y usando varios contenedores en un mismo proyecto, están disponibles en la https://www.jenkins.io/doc/book/pipeline/docker/[documentación de Jenkins]
 
 == Conexión con la máquina de despliegue

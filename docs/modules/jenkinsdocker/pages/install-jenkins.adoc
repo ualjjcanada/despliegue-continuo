@@ -11,7 +11,7 @@ Lo más adecuado es que construyas la imagen de Jenkins con Docker en la propia 
 
 Conecta por ssh a la instancia de jenkins. Recuerda que el usuario de la instancia es `ubuntu`. Por tanto, la conexión a la misma  consistiría en ejecutar desde el terminal el comando 
 ```
-ssh ubuntu@MAQUINA_JENKINS`
+ssh ubuntu@MAQUINA_JENKINS
 ```
 sustituyendo MAQUINA_JENKINS por la IP o el nombre DNS de la misma. 
 
