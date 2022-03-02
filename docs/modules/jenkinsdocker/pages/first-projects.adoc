@@ -130,11 +130,12 @@ $ ls -la /var/run/docker.sock
 srw-rw-rw- 1 root docker 0 Mar  2 19:24 /var/run/docker.sock
 ```
 ====
-=== Pipeline con un contenedor como agente
 
-Otros ejemplos similares con contenedores NodeJS, y usando varios contenedores en un mismo proyecto, están disponibles en la https://www.jenkins.io/doc/book/pipeline/docker/[documentación de Jenkins]
+Otros ejemplos similares con contenedores NodeJS están disponibles en la https://www.jenkins.io/doc/book/pipeline/docker/[documentación de Jenkins]
 
-Es habitual tener varias tecnologías en un mismo proyecto. Por ejemplo, un repositorio puede tener tanto un back-end basado en Java como un front-end basado en JavaScript. Combinar Docker y Pipeline permite usar diferentes agentes en diferentes fases (stages) del pipeline: 
+=== Usando varios contenedores como agente
+
+Es habitual tener varias tecnologías en un mismo proyecto. Por ejemplo, un repositorio puede tener tanto un back-end basado en Java como un front-end basado en JavaScript. Combinar Docker y Pipeline permite usar diferentes agentes en diferentes fases (_stages_) del pipeline: 
 
 [source,bash,subs="verbatim,quotes"]
 ----
@@ -163,7 +164,7 @@ pipeline {
 
 == Conexión con la máquina de despliegue
 
-Para realizar el despliegue, deberás permitir que Jenkins ejecute unos comandos en la máquina de despliegue. Para ello, la instancia Jenkins debe poder conectarse a la instancia de despliegue mediante una conexión SSH basada en autenticación por pareja de claves pública/privada, que ha demostrado ser más seguro sobre la autenticación estándar de nombre de usuario/contraseña.
+Para automatizar el despliegue sobre la instancia que tenemos creada para ello, deberás permitir que Jenkins ejecute  comandos sobre la máquina de despliegue a través de SSH. Para ello, la instancia Jenkins debe poder conectarse a la instancia de despliegue mediante una conexión SSH basada en autenticación por pareja de claves pública/privada, que ha demostrado ser más seguro sobre la autenticación estándar de nombre de usuario/contraseña.
 
 .Esquema de despliegue con Jenkins
 image::deploy-schema-full.png[role="thumb", align="center"]
@@ -205,7 +206,7 @@ image::jenkins-cat-public-key.png[role="thumb", align="center"]
 
 [WARNING]
 ====
-Debido a que algunos terminales añaden saltos delinea al copiar texto desde el terminal, como ocurre con cloud shell de GCP, es _recomendable_ copiar el contenido de la clave pública en cualquier editor de texto "plano" (Notepad++, Sublime, VS Code, etc) y eliminar los saltos de línea.
+Debido a que algunos terminales añaden saltos delinea al copiar texto desde el terminal, como ocurre con cloud shell de GCP, es _recomendable_ copiar el contenido de la clave pública en cualquier editor de texto "plano" (Notepad++, Sublime, VS Code, etc) y eliminar los saltos de línea, si los hubiera.
 ====
 
 [start=8]
@@ -265,7 +266,7 @@ image::ssh-known_hosts.png[role="thumb", align="center"]
 image::ssh-known_hosts-local.png[role="thumb", align="center"]
 
 [start=19]
-. Entra en Jenkins y añade el siguiente comando al proyecto __hello_docker__ existente, sustituyendo __MAQUINA_DEPLOY__ por el nombre DNS de la máquina de despliegue.
+. Ahora que la conexión por SSH entre la máquina Jenkins y la máquina de despliegue es correcta, vamos a hacer que Jenkins automatice la ejecución de comandos sobre la máquina de despliegue: entra en Jenkins y añade el siguiente comando al proyecto __hello_docker__ existente, sustituyendo __MAQUINA_DEPLOY__ por el nombre DNS de la máquina de despliegue.
 
 [source,bash,subs="verbatim,quotes"]
 ----
