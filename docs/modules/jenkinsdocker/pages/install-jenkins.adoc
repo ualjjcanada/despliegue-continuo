@@ -1,5 +1,6 @@
 = Instalación y configuración de Jenkins
-Aquí se describe cómo desplegar Jenkins como un contenedor de Docker.
+
+A continuación se describe cómo desplegar Jenkins como un contenedor de Docker.
 
 == Construcción del contenedor Jenkins
 
