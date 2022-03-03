@@ -161,7 +161,7 @@ image::jenkins-welcome.png[role="thumb", align="center"]
 
 == Instalación de plugins adicionales
 
-Vamos a instalar varios plugins: greenballs, NodeJs, GitHub integration, Docker Pipeline. 
+Vamos a instalar varios plugins: NodeJs, GitHub integration, Docker Pipeline, Warnings Next Generation, Jacoco, Code Coverage API. 
 
 Haz clic en __Manage Jenkins__ > __Manage Plugins__. En la pestaña __Available__ busca __Github integration__, seleccionaló y pulsa en __Download now and install after restart__.
 

@@ -1,0 +1,293 @@
+= Aplicación web Java
+
+== Ejemplo PetClinic. Construcción y ejecución en local
+
+Una vez que hemos configurado correctamente nuestro entorno de CI/CD con Jenkins, vamos a estudiar varios ejemplos tanto en Java como en NodeJs. Para comprender los ejemplos, primero los vamos a construir y ejecutar en local, para después  automatizar el proceso de construcción y despliegue con Jenkins.
+
+En este primer ejemplo en Java, nos vamos a basar en el proyecto PetClinic con Spring Boot, disponible en https://github.com/spring-projects/spring-petclinic[GitHub]. Petclinic es una aplicación https://spring.io/guides/gs/spring-boot[Spring Boot] construida usando https://spring.io/guides/gs/maven/[Maven] como herramienta de soporte a la gestión y construcción (_build_). 
+
+https://es.wikipedia.org/wiki/Spring_Framework[Spring Boot] es un framework de código abierto para el desarrollo de aplicaciones Java basadas en https://spring.io/[Spring]. Spring Boot genera una proyecto Maven/Gradle con todo lo necesario y que se autoconfigura en el arranque. Por ejemplo, si decimos que queremos una aplicación web, Spring Boot automáticamente embebe un Tomcat y lo configura con el servlet de Spring. Toda la configuración la añade al archivo de la herramienta de __build__ que indiquemos, en caso de Maven, al archivo *`pom.xml`*.
+
+Recordemos que *Maven* es una herramienta software para la gestión y construcción de proyectos Java. https://maven.apache.org/[Apache Maven] estandariza la configuración de un proyecto en todo su ciclo de vida, como son todas las fases de compilación, ejecución de pruebas, empaquetado, etc. Maven permite la gestión de dependencias entre módulos y distintas versiones de librerías, simplemente indicando los módulos que componen el proyecto, y las dependencias utiliza el software que estamos desarrollando, en un fichero XML de configuración llamado POM (Project Object Model).
+
+Para el proyecto PetClinic, en tu máquina de desarrollo local puedes construir el `.jar` (empaquetado) y ejecutarlo:
+
+[source,bash]
+----
+git clone https://github.com/spring-projects/spring-petclinic.git
+cd spring-petclinic
+./mvnw package <1>
+java -jar target/*.jar <2>
+----
+<1> Llama a `mvnw`, el _warper_ de Maven que instala Maven (si es necesario), y ejecuta el __goal__ `*package*` que se encarga de compilar, ejecutar los test y empaquetar la aplicación en un único archivo ejecutable `.jar`. La primera vez que lances la construcción tardará más de 5 minutos, ya que tiene que descargar todas las dependencias necesarias desde los repositorios de Maven (Maven Central), y después lanzar los tests. Toda la configuración necesaria está contenida en el archivo `pom.xml` de Maven.
+
+<2> Ejecuta la aplicación a partir del `.jar`. Puedes acceder a PetClinic en: http://localhost:8080/
+
+.Página principal de PetClinic
+image::petclinic-homepage.png[role="thumb", align="center"]
+
+En su configuración predeterminada, Petclinic utiliza una base de datos en memoria (H2) que se inicia con datos predeterminados, y los nuevos datos que se guarden se pierden al reiniciar la aplicación. 
+
+En caso de necesitar persistencia de los datos, PetClinic también está preconfigurada para usar MySql. Para cambiar el tipo de base de datos, la aplicación debe ejecutarse con un perfil de MySql: `spring.profiles.active=mysql`.
+
+[source,bash]
+----
+java -Dspring.profiles.active=mysql -jar target/*.jar 
+----
+
+Recuerda que para ejecutarla en este modo, debes tener un MySql funcionando en local, o bien lanzar MySql como contenedor con *docker* o con *docker-compose*. Existe un archivo `docker-compose.yml` https://github.com/spring-projects/spring-petclinic/blob/main/docker-compose.yml[disponible en el repositorio] del proyecto PetClinic, por tanto puedes iniciar MySql así:
+
+[source,bash]
+----
+docker-compose up -d 
+----
+
+El archivo `docker-compose.yml` que permite iniciar MySql puedes consultarlo en la carpeta raíz del proyecto, y es el siguiente:
+
+[source,yml,subs="verbatim,quotes"]
+----
+mysql:
+  image: mysql:5.7
+  ports:
+    - "3306:3306"
+  environment:
+    - MYSQL_ROOT_PASSWORD=
+    - MYSQL_ALLOW_EMPTY_PASSWORD=true
+    - MYSQL_USER=petclinic
+    - MYSQL_PASSWORD=petclinic
+    - MYSQL_DATABASE=petclinic
+  volumes:
+    - "./conf.d:/etc/mysql/conf.d:ro"
+----
+
+== Creación del Pipeline para PetClinic
+
+Una vez que hemos probado la ejecución y funcionamiento de la aplicación PetClinic en local, vamos a configurar el proyecto en el servidor Jenkins de CI/CD para que este se encargue de la construcción y el despliegue automatizados.
+
+Conecta a tu Jenkins, y crea un nuevo item de tipo Pipeline. Dale el nombre 'spring-petclinic-pipeline':
+
+.New Item, PetClinic pipeline
+image::new-item-pipeline-petclinic.png[role="thumb", align="center"]
+
+En el bloque Pipeline, pega la configuración siguiente:
+
+[source,groovy]
+----
+pipeline {
+  agent any <1>
+
+  tools {
+    // Previamente has debido instalar Maven con el nombre "Default Maven"
+    maven "Default Maven" <2>
+  }
+
+  stages { <3>
+    stage('Git fetch') { <4>
+      steps {
+        // Get some code from a GitHub repository
+        git branch:'main', url:'https://github.com/spring-projects/spring-petclinic.git'
+      }
+    }
+    stage('Compile, Test, Package') { <5>
+      steps {
+        // Run goal 'package' includes compile, test and package.
+        sh "mvn clean package -Dcheckstyle.skip"
+      }
+      post { <6>
+        // If Maven was able to run the tests, even if some of the test
+        // failed, record the test results and archive the jar file.
+        success {
+          junit '**/target/surefire-reports/TEST-*.xml'
+          archiveArtifacts 'target/*.jar'
+        }
+      }
+    }
+  }
+}
+----
+
+<1> agente o nodo de Jenkins en que ejecuta la construcción del proyecto. En el ejemplo, `any` indica que se ejecutará cualquier nodo, en nuestro caso será en __master__ ya que es el único nodo que hay definido en nuestro Jenkins.
+<2> como herramienta para la construcción se usará maven. Pon aquí el nombre que diste a tu instalación de Maven configurada previamente en Tools Configuration. 
+<3> Bloque de `stages`: fases o etapas que conforman el pipeline
+<4> Fase de descarga del repositorio git
+<5> Fase de compilación, ejecución de test y empaquetado de la aplicación. Se realizarán con los __goals__ `clean package`: primero se elimina todo lo generado en la construcción anterior, y a continuación se lanza la construcción con `package` tal y como está definida en el archivo `pom.xml`. La opcion `-Dcheckstyle.skip` anula el análisis de CheckStyle, que lo añadiremos en una fase posterior.
+<6> Paso posterior que guarda los resultados de los test de JUnit para generar la gráfica de evolución de los test.
+
+Tras ejecutar el pipeline, con "Build now", el resultado debe ser el siguiente:
+
+.Construcción del pipeline PetClinic
+image::petclinic-pipeline-build-1.png[role="thumb", align="center"]
+
+Si realizamos una segunda ejecución, ya aparecerá la gráfica de evolución de los tests de JUnit. 
+
+== Informe de Cobertura de código
+
+Jenkins nos permite publicar métricas asociadas al proyecto. Una de ellas, es la cobertura de código ejecutado por las pruebas. 
+
+****
+La *Cobertura* de código nos indica el porcentaje de código de producción que está siendo ejecutado por los test. Es deseable tener un valor de cobertura lo más próximo posible al 100%
+****
+
+El proyecto PetClinic contiene 40 test unitarios en JUnit, y está configurado (ver `pom.xml`) para que se calcule la cobertura cuando se lanzan los tests mediante el plugin JaCoCo (Java Code Coverage). Puedes visualizar el resultado de la cobertura en tu construcción local, en la carpeta `target/site/jacoco`: 
+
+.Archivos generados por Jacoco
+image::jacoco-local-results.png[role="thumb", align="center"]
+
+.Informe html de la cobertura Jacoco
+image::jacoco-local-html.png[role="thumb", align="center"]
+
+Y si haces clic en el nombre de una clase, verás el código coloreado: 
+
+.Detalle la cobertura de las lineas de código
+image::plugins-jacoco-class-details.png[role="thumb", align="center"]
+<1> Las lineas [lime-background]#verdes# están cubiertas, es decir, han sido ejecutadas por al menos 1 test.
+<2> Las lineas [yellow-background]#amarillas# están parcialmente cubiertas (__missed branches__): un resultado de la condición (verdadero/falso) ha sido ejecutado por algún test pero el otro no ha sido ejecutado por ningún test.
+<3> Las líneas [red-background]#rojas# no están cubiertas, no han sido ejecutadas por ningún test.
+
+
+Para visualizar el resultado de la cobertura en Jenkins: 
+
+. Instala el plugin de Jacoco y el plugin Code Coverage API
+
+.Instalación del plugin Jacoco
+image::plugins-jacoco-install.png[role="thumb", align="center"]
+
+.Instalación del plugin Code Coverage API
+image::plugins-code-coverage-api-install.png[role="thumb", align="center"]
+
+[start=2]
+
+. Añade las dos siguientes lineas al bloque `post` para que se guarde y muestre el informe de cobertura.
+
+[source,groovy]
+----
+  ...
+  success {
+    junit '**/target/surefire-reports/TEST-*.xml'
+    archiveArtifacts 'target/*.jar'
+    jacoco(execPattern: 'target/jacoco.exec') <1>
+    publishCoverage adapters: [jacocoAdapter('target/site/jacoco/jacoco.xml')] <2>
+  }
+  ...
+----
+
+<1> Añade el informe Coverage Trend
+<2> Añade el informe Coverage Report
+
+Tras la construcción de nuevo del proyecto, verás la gráfica de los resultados de los test y debajo la gráfica de evolución de cobertura: 
+
+.Informe de cobertura en el dashboard
+image::plugins-jacoco-dashboard-result.png[role="thumb", align="center"]
+
+Haciendo clic sobre la gráfica accedes a los detalles: 
+
+.Detalle de de cobertura
+image::plugins-jacoco-details-result.png[role="thumb", align="center"]
+
+
+== Análisis estático de código: __Checkstyle__
+
+Para mantener y aumentar la calidad de nuestro código debemos ayudarnos, entre otras herramientas, de técnicas de https://es.wikipedia.org/wiki/An%C3%A1lisis_est%C3%A1tico_de_software[*análisis estático de código*]. Básicamente, se encargan de buscar defectos en el código sin necesidad de que este se ejecute. En Java una de las más habituales es https://checkstyle.sourceforge.io/[Checkstyle], aunque hay otras como FindBugs, PMD, y SonarQube que integra a los anteriores. 
+
+****
+*CheckStyle* valida el estilo del código respecto al estilo oficial de Java.
+****
+
+El proyecto PetClinic tiene configurado el plugin de CheckStyle en el `pom.xml`: 
+
+[source,xml]
+----
+    ...
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>3.1.0</version>
+        ...
+      </plugin>
+    ...
+----
+
+Para ejectutar CheckStyle en local, ejecuta el comando de maven (`mvn`) con los siguietnes __goals__: `mvn checkstyle:checkstyle site -DgenerateReports=false`
+
+Tras la ejecución, en la carpeta `target/site/` verás el archivo `checkstyle.html`:
+
+.Informe de CheckStyle
+image::checkstyle-report-html.png[role="thumb", align="center"]
+
+Sería labor del equipo de desarrollo revisar los errores detectados y tratar de corregirlos, siempre que realmente supongan una mejora para la calidad del código. 
+
+Para ejecutar y visualizar el informe en Jenkins: 
+
+. Instalar el plugin https://github.com/jenkinsci/warnings-ng-plugin/blob/master/doc/Documentation.md#declarative-pipeline-configuration[Warnings Next Generation].
+. Añadir al pipeline un nuevo `stage` con la siguiente descripción: 
+
+
+[source,groovy]
+----
+  stage ('Analysis') {
+    steps {
+      // Warnings next generation plugin required
+      sh "mvn checkstyle:checkstyle site -DgenerateReports=false"
+      recordIssues enabledForFailure: true, tool: checkStyle() 
+    }
+  }
+----
+
+Tras la construcción, el pipeline tiene una nueva fase y además en el menú tenemos acceso al informe de CheckStyle.
+
+.Pipeline con la nueva fase de Análisis
+image::checkstyle-report-dashboard.png[role="thumb", align="center"]
+
+.Detalles del informe de CheckStyle
+image::checkstyle-report-details.png[role="thumb", align="center"]
+
+.Saber más...
+****
+Si estás interesado en profundizar en este tema, te recomiendo integrar https://www.sonarqube.org/[SonarQube] con Jenkins, ya que SonarQube realiza un análisis mucho más detallado de la calidad y seguridad del código, realizando tanto análisis estático de código (CheckStyle y otros), como de análisis de seguridad (vulnerabilidades), y definiendo lo que denomina https://docs.sonarqube.org/latest/user-guide/quality-gates/[__Quality Gates__] que permiten definir condiciones que se deben cumplir basadas en los valores de las métricas del proyecto (por ejemplo, que la cobertura de código sea mayor del 80%). Puedes encontrar mucha documentación online sobre cómo hacerlo:
+
+- https://docs.sonarqube.org/latest/setup/get-started-2-minutes/[Instalar SonarQube] como aplicación o como contenedor Docker (recomendado)
+- Instalar el plugin https://plugins.jenkins.io/sonar/[SonarQube Scanner for Jenkins]
+- https://docs.sonarqube.org/latest/analysis/scan/sonarscanner-for-jenkins/#header-1[Configurar] SonarQube Scanner for Jenkins
+- https://docs.sonarqube.org/latest/analysis/scan/sonarscanner-for-jenkins/#header-6[Añadir al pipeline] la fase de análisis de Sonar (_Declarative pipeline example:_). Más info de Sonar en pipeline: https://www.jenkins.io/doc/pipeline/steps/sonar/#sonarqube-scanner-for-jenkins[SonarQube Scanner for Jenkins]
+
+
+Además, Si tu proyecto está en un repositorio público en GitHub, puedes ahorrarte tener que instalar tu propio SonarQube utilizando https://sonarcloud.io/[SonarCloud], el servicio de SonarQube en la nube (SaaS) gratuito para proyectos públicos, con el que evitas tener que instalar y mantener tu propio SonarQube. 
+
+Para lanzar el análisis de Sonar con maven:
+
+. Genera el login https://docs.sonarqube.org/latest/user-guide/user-token/[TOKEN]
+
+. Ejecuta los goals de maven: `clean verify sonar:sonar -Dsonar.login=$SONAR_LOGIN_TOKEN`
+
+Incluso puedes configurar SonarCloud y Jenkins para que  https://blog.jdriven.com/2019/08/sonarcloud-github-pull-request-analysis-from-jenkins/[analizar los __pull request__] de tu repositorio y conocer el resultado del análisis de Sonar antes de hacer el __merge__ del pull request.
+****
+
+== Despliegue en la VM
+
+Para desplegar la aplicación PetClinic en la instancia de despliegue vamos a copiar sobre ella el archivo JAR y a continuación ejecutaremos en ella la orden de java para ponerla en marcha: 
+
+Copia este nueva fase en tu pipeline, sustituyendo DEPLOY_MACHINE por la IP o el nombre DNS de tu instancia: 
+
+[source,groovy]
+----
+  stage('Deploy'){
+    steps {
+      sh '''
+        ssh -i ~/.ssh/id_rsa_deploy ubuntu@DEPLOY_MACHINE "mkdir -p ~/spring-petclinic" <1>
+        scp -i ~/.ssh/id_rsa_deploy $WORKSPACE/target/*.jar ubuntu@DEPLOY_MACHINE:~/spring-petclinic <2>
+        ssh -i ~/.ssh/id_rsa_deploy ubuntu@DEPLOY_MACHINE "if pgrep java; then pkill java; fi" <3>
+        ssh -i ~/.ssh/id_rsa_deploy ubuntu@DEPLOY_MACHINE "nohup java -jar ~/spring-petclinic/*.jar > ~/spring-petclinic/yourservice.log 2>&1 &" <4>
+      '''
+    }
+  }
+----
+<1> Crea la carpeta `spring-petclinic` dentro de la carpeta HOME del usuario `ubuntu` en la máquina de despliegue
+<2> Copia con `scp` el archivo `.jar`, que se ha generado tras la construcción con maven, en la máquina de despligue
+<3> Detiene el proceso `java` si existe de un despliegue anterior.
+<4> Ejecuta la aplicación java empaquetada en el `.jar`, en background y con `nohup`, que hace que el proceso siga funcionando incluso si el usuario que lo inició cierra la sesión. De esta manera finaliza el comando ssh y el proceso sigue funcionando, es decir, la aplicación PetClinic estará desplegada y funcionando. 
+
+****
+Referencias:
+
+. https://medium.com/@weblab_tech/how-to-publish-artifacts-in-jenkins-f021b17fde71[How to build on Jenkins and publish artifacts via ssh with Pipelines]
+****
