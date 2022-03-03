@@ -1,16 +1,16 @@
 ////
-// Aplicación NodeJs con Docker
+// Aplicación Node.js con Docker
 ////
 
-= _Hola_Mundo_ en Node.js con Docker
+= _Hola mundo_ en Node.js con Docker
 
-Para realizar el despliegue de la app Hola Mundo en NodeJs como un contenedor, primero tenemos que https://nodejs.org/fr/docs/guides/nodejs-docker-webapp/[dockerizar] la aplicación. Una vez construido el contenedor, habrá que publicar la imagen de contenedor en un registro como Google Container Registry, y por último ejecutar el contenedor en la instancia de despliegue.
+Para realizar el despliegue de la app _Hola mundo_ en Node.js como un contenedor, primero tenemos que https://nodejs.org/fr/docs/guides/nodejs-docker-webapp/[dockerizar] la aplicación. Una vez construido el contenedor, habrá que publicar la imagen de contenedor en un registro como Google Container Registry, y por último ejecutar el contenedor en la instancia de despliegue.
 
-A continuación se describe cómo crear un contenedor Docker de la aplicación NodeJs. Los pasos se realizan en local, y al final configuraremos el pipeline de Jenkins para que se realicen automáticamente. 
+A continuación se describe cómo crear un contenedor Docker de la aplicación Node.js. Los pasos se realizan en local, y al final configuraremos el pipeline de Jenkins para que se realicen automáticamente. 
 
 == Creación del `Dockerfile`
 
-Para crear el contendedor de Docker que empaquete la aplicación NodeJs, vamos a definir el siguiente archivo `Dockerfile` que debe estar en la carpeta raíz del proyecto:
+Para crear el contendedor de Docker que empaquete la aplicación Node.js, vamos a definir el siguiente archivo `Dockerfile` que debe estar en la carpeta raíz del proyecto:
 
 .Dockerfile
 [source, docker]
@@ -343,7 +343,7 @@ image::jenkins-nodeapp-full-pipeline.png[role="thumb", align="center"]
 ****
 Referencias
 
-. https://nodejs.org/es/docs/guides/nodejs-docker-webapp/[Dockerizing a Node.js web app] @ NodeJs Docs
+. https://nodejs.org/es/docs/guides/nodejs-docker-webapp/[Dockerizing a Node.js web app] @ Node.js Docs
 
 . https://medium.com/@sssanjaya/a-simple-docker-setup-for-simple-hello-world-nodejs-application-bcf79bb608a0[A simple docker setup for hello world nodejs application] @ Medium
 

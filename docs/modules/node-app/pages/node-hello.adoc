@@ -12,6 +12,8 @@ Al igual con el ejemplo anterior en Java, en primer lugar trabajaremos con la ap
 La implementación de la integración y despliegue continuos permitirá que, para cada cambio de código en el repositorio, Jenkins será notificado y descargará los cambios, instalará las dependencias y ejecutará los tests. Si los tests pasan correctamente, Jenkins desplegará la aplicación en el servidor de despliegue. Y si fallan, se notificará al desarrollador.
 ****
 
+== Construcción y ejecución en local
+
 Nos vamos a basar en  el proyecto _HelloWorld_ en NodeJs, disponible en https://github.com/ualcnsa/nodeapp. Si deseas poder hacer cambios sobre el mismo, crea un _fork_ y trabaja con tu _fork_ a partir de ahora. 
 
 Veamos los archivos que componen la aplicación: 
