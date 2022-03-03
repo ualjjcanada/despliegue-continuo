@@ -1,0 +1,354 @@
+////
+// Aplicación NodeJs con Docker
+////
+
+= _Hola_Mundo_ en NodeJs con Docker
+
+Para realizar el despliegue de la app Hola Mundo en NodeJs como un contenedor, primero tenemos que https://nodejs.org/fr/docs/guides/nodejs-docker-webapp/[dockerizar] la aplicación. Una vez construido el contenedor, habrá que publicar la imagen de contenedor en un registro como Google Container Registry, y por último ejecutar el contenedor en la instancia de despliegue.
+
+A continuación se describe cómo crear un contenedor Docker de la aplicación NodeJs. Los pasos se realizan en local, y al final configuraremos el pipeline de Jenkins para que se realicen automáticamente. 
+
+== Creación del `Dockerfile`
+
+Para crear el contendedor de Docker que empaquete la aplicación NodeJs, vamos a definir el siguiente archivo `Dockerfile` que debe estar en la carpeta raíz del proyecto:
+
+.Dockerfile
+[source, docker]
+----
+FROM node:10-alpine
+
+# Create app directory
+WORKDIR /usr/src/app
+
+# Install app dependencies
+# A wildcard is used to ensure both package.json AND package-lock.json are copied
+# where available (npm@5+)
+COPY package*.json ./
+
+RUN npm install
+# If you are building your code for production
+# RUN npm ci --only=production
+
+# Bundle app source
+COPY . .
+
+EXPOSE 3000
+CMD [ "node", "index.js" ]
+----
+
+El Dockerfile es muy sencillo, contiene los https://nodejs.org/fr/docs/guides/nodejs-docker-webapp/#creating-a-dockerfile[pasos básicos] para ejecutar una aplicación en un contenedor.
+
+Crea además un archivo `.dockerignore` en la misma carpeta que tu Dockerfile con el siguiente contenido:
+
+----
+node_modules/
+.git/
+.gitignore
+npm-debug.log
+----
+
+. Puedes construir la imagen del contenedor:
+
+[source, bash]
+----
+docker build -t <your username>/nodeapp .
+----
+
+Tras ello, ejecuta: `docker images`. La imagen debe aparecer en la lista de imágenes de Docker en tu equipo: 
+
+
+[start=2]
+Prueba la ejecución del contenedor en local: 
+
+[source, bash]
+----
+docker run -p 3000:3000 -d --name hello-node <your username>/nodeapp 
+----
+
+Comprueba que se ha iniciado la aplicación en http://localhost:3000.
+
+****
+. Comprueba que el contenedor está ejecutándose con `docker ps`
+. Detén el contenedor con `docker stop <ID>`
+. Comprueba que ya no está ejecutándose, pero el contenedor sigue existiendo, lo puedes ver con `docker ps -a`
+. Podrías volver a arrancarlo con `docker start <ID>`, pero en su lugar, elimina el contenedor con `docker rm <ID>`
+. La imagen sigue existiendo, puedes verlo con `docker images`
+****
+
+== Publicación de la imagen en el registro 
+
+Una vez creada la imagen con `docker build` y probada su ejecución con `docker run`, el siguiente paso será publicar la imagen en un registro de contenedores, mediante `docker push`. De nuevo vamos a usar Google Cloud https://cloud.google.com/container-registry?hl=es[Container Registry]. 
+
+Para poder hacer `push` debemos tener permisos de escritura, y por tanto debemos autenticarnos en el servicio Container Registry. Este proceso ya se hizo en la para el ejemplo de Java en la sección _Autenticación en Container Registry_. Ahora, simplemente comprueba que mantienes el login del Container Registry.
+
+. Comprueba el login al registro:
+
+    docker login https://gcr.io
+
+.Comprobar docker login
+image::docker-login-done.png[role="thumb", align="center"]
+
+
+[WARNING]
+====
+Si `docker login` te da error, revisa los pasos de la sección anterior de _Autenticación en Container Registry_. No es necesario que vuelvas a generar el archivo de credenciales, simplemente copia ese archivo .json en el proyecto actual y úsalo para hacer login.
+
+En tal caso, no olvides añadir el archivo de credenciales al `.gitignore` para evitar publicar en GitHub tus credenciales.
+====
+
+[start=2]
+. Etiqueta el contenedor con el nombre completo incluyendo la referencia a Container registry (gcr.io). Primero definimos una variable de entorno con el nombre de nuestro proyecto GCP, y luego etiquetamos la imagen ya construida con un nuevo nombre completo del registro de contenedores: 
+
+
+[source, bash]
+----
+GOOGLE_CLOUD_PROJECT=cnsa-2022-user123
+
+docker tag  <your username>/nodeapp gcr.io/$GOOGLE_CLOUD_PROJECT/nodeapp:1.0
+----
+
+[start=3]
+. Comprueba que se ha etiquetado correctamente
+
+.Imagen etiquetada
+image::docker-tag-nodeapp.png[role="thumb", align="center"]
+
+[start=4]
+. A continuación, publica la imagen en el registro con `docker push`
+
+[source, bash]
+----
+docker push gcr.io/$GOOGLE_CLOUD_PROJECT/nodeapp:1.0
+----
+
+[start=4]
+. Comprueba que se ha publicado correctamente.
+
+.Lista de imágenes en Container Registry
+image::container-registry-pushed-nodeapp.png[role="thumb", align="center"]
+
+La imagen del contenedor *nodeapp* ya está disponible en el registro privado de nuestro proyecto GCP. Utilizando nuestras credenciales podremos hacer `docker pull` de dicha imagen para descargarla en cualquier máquina con docker, y ejecutarlo con `docker run`.
+
+[source, bash]
+----
+docker run -p 3000:3000 -t --name nodeapp gcr.io/$GOOGLE_CLOUD_PROJECT/nodeapp:1.0
+----
+
+== Despliegue en VM
+
+Conecta a la instancia de despliegue para ejecutar el contenedor. Antes vamos a comprobar el login al registro. En la máquina de despliegue ya habíamos copiado el archivo de credenciales `.json` con premisos sobre Container Registry. A continuación se recuerdan los comandos necesarios para ello. 
+
+[source, bash]
+----
+# Conectamos a la máquina de despliegue
+ssh ubuntu@DNS_MAQUINA_DEPLOY
+# Autenticamos docker contra Container Registry
+cat keyfile.json | docker login -u _json_key --password-stdin https://gcr.io
+# ejecutamos el contenedor desde gcr.io
+docker run -p 8080:3000 -t --name nodeapp gcr.io/$GOOGLE_CLOUD_PROJECT/nodeapp:1.0
+----
+
+Hemos publicado el contenedor en el puerto 8080 ya que es el que está abierto en las reglas del firewall de nuestro proyecto GCP. 
+
+Es posible que la ejecución del contenedor de un error, porque el puerto 8080 ya esté en uso:
+
+[source, bash]
+----
+Error starting userland proxy: listen tcp 0.0.0.0:8080: bind: address already in use. 
+----
+
+Para solucionarlo, bien detén el proceso o contenedor java que está corriendo con la aplicación PetClinic del ejemplo anterior. O bien utiliza el puerto 80 que también está abierto. 
+
+== Integración y despliegue continuos con Jenkins
+
+A continuación, vamos a automatizar en Jenkins todo el proceso: 
+
+- la construcción de la imagen del contenedor, 
+- la publicación de la imagen en el registro, y
+- el despliegue del contenedor. 
+
+Los plugins de  Jenkins necesarios ya los tenemos configurados el ejemplo en Java. 
+
+1. Definimos un nuevo proyecto en Jenkins de tipo pipeline, con el nombre ```nodeapp-Docker-abc123``` sustituyendo abc123 por nuestro nombre de usuario. Son necesarios 3 fases (stages) en el pipeline: _build image_, _push image_, y _deploy container_.
+
+Comenzamos por la *construcción de la imagen*:
+
+[source,groovy]
+----
+pipeline {
+  agent any
+  environment {
+    CONTAINER_REGISTRY = 'gcr.io'
+    GOOGLE_CLOUD_PROJECT = 'cnsa-2022'
+    CREDENTIALS_ID = 'cnsa-2022-gcr'
+  }
+      
+  tools {
+    // In Global tools configuration, install Node configured as "nodejs 13"
+    nodejs "nodejs 13"
+  }
+
+  stages {
+
+    stage("Git Checkout") {
+      steps {
+        // checkout scm
+        git 'https://github.com/ualcnsa/nodeapp.git' 
+      }
+    }
+
+    stage('Install dependencies') {
+      steps {
+        sh 'npm install'
+      }
+    }
+    stage('Test') {
+      steps {
+         sh 'npm run test-jenkins'
+      }
+      post { 
+        success {
+          junit '**/test*.xml'
+        }
+      }
+    }      
+
+    stage("Build image") {
+      steps {
+        script {
+          dockerImage = docker.build(
+            "${env.CONTAINER_REGISTRY}/${env.GOOGLE_CLOUD_PROJECT}/nodeapp:${env.BUILD_ID}",
+            "-f Dockerfile ."
+          )
+        }
+      }
+    }
+  }
+}
+----
+
+Para probar que la imagen del contenedor se ha creado bien, añade la siguiente fase que hace un despliegue "local" en la propia máquina de Jenkins, es decir, ejecuta un contenedor basado en la imagen que acabamos de crear: 
+
+[source,groovy]
+----
+    stage("Run image locally") {
+      steps {
+        sh "docker stop nodeapp || true && docker rm  nodeapp || true" <1>
+        sh "docker run -d -p 8080:3000 -t --name nodeapp ${env.CONTAINER_REGISTRY}/${env.GOOGLE_CLOUD_PROJECT}/nodeapp:${env.BUILD_ID}" <2>
+      }
+    }
+----
+<1> Por si ya se ha ejecutado el pipeline anteriormente, es necesario comprobar si el contenedor `nodeapp` ya se está ejecutando, y en tal caso pararlo con `docker stop` y eliminarlo con `docker rm`
+<2> Con `docker run` ejecuta el contenedor `nodeapp` a partir de la imagen recién construida. Para que el pipeline pueda finalizar y el contenedor siga ejecutándose, se añade `-d` que indica modo _detached_ que ejecuta el contenedor en background.
+
+Tras ello, la aplicación debe estar accesible en el puerto 8080 en tu máquina de Jenkins. Para asegurarnos que la aplicación se está ejecutando bien, debemos problarlo "manualmente". Para automatizar esta prueba, lo adecuado sería realizar unos tests end-to-end, con https://www.selenium.dev[Selenium]. Esto se explicará en otra actividad, dedicada al testing.
+
+[source,groovy]
+----
+    stage('End-to-end Test image') {
+        // Ideally, we would run some end-to-end tests against our running container.
+        steps{
+            sh 'echo "End-to-end Tests passed"'
+        }
+    }
+----
+
+El siguiente paso es *publicar la imagen* en el registro.
+
+. Primero, las credenciales en Jenkins para poder hacer `push` en Container Registry ya están creadas del ejemplo anterior (Si tienes algún problema, consulta la sección correspondiente del ejemplo de Java)
+
+[start=2]
+. Define la fase para publicar la imagen del contenedor: 
+
+[source,groovy]
+----
+    stage("Push image") {
+        steps {
+            script {
+                docker.withRegistry('https://'+ CONTAINER_REGISTRY, 'gcr:'+ GOOGLE_CLOUD_PROJECT) {
+                        dockerImage.push("latest")
+                        dockerImage.push("${env.BUILD_ID}")
+                }       
+            }
+        }
+    }        
+----
+
+Comprueba que se ha publicado correctamente en el registro.
+
+.Imagen publicada en Container Registry, etiquetada con el número de build
+image::jenkins-published-nodeapp-container-registry.png[role="thumb", align="center"]
+
+Por último, quedaría el paso de *desplegar al entorno de producción*: la máquina virtual de despliegue. 
+
+Los pasos para el despliegue de la nueva imagen del contenedor consistirán en ejecutar los siguientes comandos sobre la máquina de despliegue:
+
+- `docker stop` del contenedor por si estuviera ejecutándose  
+- `docker rm` para eliminar el contenedor existente, que puede estar basado en una imagen de una versión anterior
+- `docker run` que primero hará un `docker pull` de la imagen actualizada del registro. Lo lanzaremos en el puerto 80 ya que el 8080 está ocupado por el despliegue que hicimos sin contenedor. 
+
+Estas acciones debemos añadirlas a un `stage` del pipeline de Jenkins que se encargará de desplegar el nuevo contenedor automáticamente. En el siguiente código, sustituye `DNS_DEPLOY_INSTANCE` por el nombre DNS de tu instancia de despliegue. También puedes definirla como una variable de entorno al inicio del pipeline.
+
+[source,groovy]
+----
+    stage('Deploy to Production') {
+      steps{
+        sh '''
+          ssh -i ~/.ssh/id_rsa_deploy ubuntu@DNS_DEPLOY_INSTANCE "if docker ps -q --filter name=nodeapp | grep . ; then docker stop nodeapp ; fi" <1>
+          ssh -i ~/.ssh/id_rsa_deploy ubuntu@DNS_DEPLOY_INSTANCE "if docker ps -a -q --filter name=nodeapp | grep . ; then docker rm -fv nodeapp ; fi" <1>
+          ssh -i ~/.ssh/id_rsa_deploy ubuntu@DNS_DEPLOY_INSTANCE "docker run -d -p 8080:3000 -t --name nodeapp ${CONTAINER_REGISTRY}/${GOOGLE_CLOUD_PROJECT}/nodeapp:latest" <2>
+        '''
+      }
+    }    
+----
+<1> Ejecuta en la instancia de despliegue el comando que detiene y elimina el contenedor `nodeapp` en caso de que ya se estuviera ejecutando 
+<2> Ejecuta en la instancia de despliegue el comando para ejecutar el contenedor basado en la última versión de la imagen, lanzándolo en background y con `-d` para que el pipeline finalice y el contenedor permanezca en ejecución.
+
+La aplicación nodeapp debe estar accesible _en producción_, en el puerto 8080 en la instancia de despliegue. Para asegurarnos, debemos problarlo "manualmente". Para automatizar esta prueba _en producción_, lo adecuado de nuevo sería realizar unos tests end-to-end, con https://www.selenium.dev[Selenium]. Esto se explicará en otra actividad, dedicada al testing.
+
+[source,groovy]
+----
+    stage('End-to-end Test on Production') {
+        // Ideally, we would run some end-to-end tests against our running container.
+        steps{
+            sh 'echo "End-to-end Tests passed on Production"'
+        }
+    }
+----
+
+Por último, es una buena práctica eliminar las imágenes que se van generando en cada build, para liberar espacio en la máquina de Jenkins. Primero paramos y eliminamos el contenedor local, luego eliminamos la imagen.
+
+[source,groovy]
+----
+    stage('Remove Unused docker image') {
+      steps{
+        // input message:"Proceed with removing image locally?" <1>
+        sh 'if docker ps -q --filter name=nodeapp | grep . ; then docker stop nodeapp && docker rm -fv nodeapp; fi' <2>
+        sh 'docker rmi ${CONTAINER_REGISTRY}/${GOOGLE_CLOUD_PROJECT}/nodeapp:$BUILD_NUMBER' <3>
+      }
+    }
+----
+<1> Pide confirmación al usuario, que tendrán que pulsar un botón de _Proceed_ para continuar la ejecución del pipeline
+<2> Para y elimina el contenedor _local_ 
+<3> Elimina la imagen de contenedor en _local_ con `docker rmi` para liberar espacio.
+
+
+El pipeline completo, con todas sus fases, debe quedar así:
+
+.Pipeline completo
+image::jenkins-nodeapp-full-pipeline.png[role="thumb", align="center"]
+
+
+
+****
+Referencias
+
+. https://nodejs.org/es/docs/guides/nodejs-docker-webapp/[Dockerizing a Node.js web app] @ NodeJs Docs
+
+. https://medium.com/@sssanjaya/a-simple-docker-setup-for-simple-hello-world-nodejs-application-bcf79bb608a0[A simple docker setup for hello world nodejs application] @ Medium
+
+. https://semaphoreci.com/community/tutorials/dockerizing-a-node-js-web-application[Dockerizing a Node.js Web Application] @ SemaphoreCI
+
+. https://www.docker.com/blog/keep-nodejs-rockin-in-docker/[Top 4 Tactics To Keep Node.js Rockin’ in Docker]
+
+****

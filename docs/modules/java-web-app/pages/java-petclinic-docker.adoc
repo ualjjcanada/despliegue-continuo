@@ -12,7 +12,7 @@ Para https://spring.io/guides/gs/spring-boot-docker/[crear el contendedor de Doc
 [source, docker]
 ----
 # Start with a base image containing Java runtime
-FROM openjdk:8-jdk-alpine
+FROM openjdk:11-jdk-alpine
 # Make port 8080 available to the world outside this container
 EXPOSE 8080
 # The application's jar file
@@ -128,7 +128,7 @@ image::cloud-containers-registry-login.png[role="thumb", align="center"]
 
 [source, bash]
 ----
-GOOGLE_CLOUD_PROJECT=cnsa-2021-user123
+GOOGLE_CLOUD_PROJECT=cnsa-2022-user123
 
 docker build -t gcr.io/$GOOGLE_CLOUD_PROJECT/petclinic:1.0 .
 ----
@@ -158,7 +158,7 @@ La imagen del contenedor PetClinic ya está disponible en el registro privado de
 
 [source, bash]
 ----
-GOOGLE_CLOUD_PROJECT=cnsa-2021-user123
+GOOGLE_CLOUD_PROJECT=cnsa-2022-user123
 
 docker run -p 8080:8080 -t --name petclinic  gcr.io/$GOOGLE_CLOUD_PROJECT/petclinic:1.0
 ----
@@ -201,7 +201,7 @@ Para solucionarlo, bien detén el proceso java que está corriendo con la aplica
 docker run -p 80:8080 -t --name petclinic gcr.io/$GOOGLE_CLOUD_PROJECT/petclinic:1.0
 ----
 
-== Integración y despliegue continuo con Jenkins
+== Integración y despliegue continuo
 
 Hasta ahora hemos realizado todos los pasos de construcción, prueba y despliegue manualmente. A continuación, vamos a automatizar en Jenkins todo el proceso, cuyas principales tareas son: 
 
@@ -214,7 +214,7 @@ En Jenkins, son necesarios los siguientes plugins para trabajar con Docker y pip
 
 Definimos un nuevo proyecto en Jenkins de tipo pipeline, con el nombre ```PetClinic-Docker-abc123``` sustituyendo abc123 por nuestro nombre de usuario. Son necesarios 3 fases (stages) en el pipeline: _build image_, _push image_, y _deploy container_.
 
-=== Construcción y despliegue "local"
+=== Construcción y despliegue del contenedor
 
 Comenzamos por la *construcción de la imagen*:
 
@@ -224,8 +224,8 @@ pipeline {
   agent any 
   environment {
     CONTAINER_REGISTRY = 'gcr.io'
-    GOOGLE_CLOUD_PROJECT = 'cnsa-2021-abc123'
-    CREDENTIALS_ID = 'cnsa-2021-gcr'
+    GOOGLE_CLOUD_PROJECT = 'cnsa-2022-abc123'
+    CREDENTIALS_ID = 'cnsa-2022-gcr'
   }
   tools {
     maven "Default Maven" 
@@ -239,7 +239,7 @@ pipeline {
     }
     stage('Compile, Test, Package') { 
       steps {
-        sh "mvn clean package"
+        sh "mvn clean package -Dcheckstyle.skip"
       }
       post { 
         success {
