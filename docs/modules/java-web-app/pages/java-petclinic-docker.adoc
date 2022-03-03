@@ -6,10 +6,10 @@ A continuación se describe cómo crear un contenedor Docker de la aplicación P
 
 == Creación del `Dockerfile` multi-stage
 
-Para construir aplicaciones Maven con Docker y luego https://spring.io/guides/gs/spring-boot-docker/[crear el contendedor de Docker] que empaquete la aplicación, la opción recomendada es usar *Multi-Stage Builds* en tu Dockerfile, de manera que:
+Para construir aplicaciones Maven con Docker y luego https://spring.io/guides/gs/spring-boot-docker/[crear el contendedor de Docker] que empaquete la aplicación, la opción recomendada es usar https://docs.docker.com/get-started/09_image_best/#multi-stage-builds[*Multi-Stage Builds*] en tu Dockerfile, de manera que:
 
-* Una primera fase construye el `.jar` a partir de una imagen de Maven, como por ejemplo `maven:3.8.4-openjdk-11-slim`
-* Y luego ese `.jar` lo copia en el contenedor basado en la imagen OpenJDK-11, que es el entorno de ejecución Java necesario.
+* Una primera fase o _stage_ construye el `.jar` a partir de una imagen de Maven, como por ejemplo `maven:3.8.4-openjdk-11-slim`
+* Y luego en una seguna fase, ese `.jar` lo copia en el contenedor basado en la imagen OpenJDK-11, que es el entorno de ejecución Java necesario.
 
 Vamos a definir el siguiente archivo `Dockerfile` que debe estar en la carpeta raíz del proyecto PetClinic:
 
@@ -85,21 +85,17 @@ Una vez creada la imagen con `docker build` y probada su ejecución con `docker 
 
 Para poder hacer `push` debemos tener permisos de escritura, y por tanto debemos autenticarnos en el servicio Container Registry. 
 
-https://cloud.google.com/container-registry/docs/advanced-authentication[Authentication] _allows you to connect to Container Registry with your credentials. To push or pull images, you must configure the permissions that are required to access the registry._
+https://cloud.google.com/container-registry/docs/advanced-authentication[Authentication] permite conectar al Registro de Contenedores con tus credenciales, y  hacer push y pull de imágenes. Para ello debes configurar los los permisos necesarios para accdeder al registro, utilizando un  https://cloud.google.com/container-registry/docs/advanced-authentication#json-key[JSON key file] como método de autenticación:
 
-_Using https://cloud.google.com/container-registry/docs/advanced-authentication#json-key[JSON key file] as authentication method:_
-
-_To create a new service account and a service account key for use with Container Registry repositories only:_
-
-. _Create the service account for interacting with repositories:_
-
-.. _In Google Cloud Console, open the https://console.cloud.google.com/apis/credentials/serviceaccountkey[Create service account key page]._
-
-.. _From the Service account list, select New service account_
-
-.. _In the Service account name field, enter a name_
-.. _From the Role list, select the appropriate Container Registry role for the service account: Cloud Storage / Storage Administrator_
-.. _Click Create. A JSON file that contains your key downloads to your computer._
+* En la Consola Google Cloud, seleccionar el proyecto Google Cloud.
+* En el menú de navegación seleccionar `IAM y administración | https://console.cloud.google.com/apis/credentials/serviceaccountkey[Cuentas de servicio]`.
+* Seleccionar `Crear cuenta de servicio`.
+* Darle un nombre (p.e. `container-registry`)
+* Seleccionar "Crear y continuar".
+* En el paso `Conceder a esta cuenta de servicio acceso al proyecto` del asistente, seleccionar el rol `Cloud Storage -> Admisnitrador de almacenamiento`. Continuar y Listo.
+* Editar la Cuenta de servicio. En la sección `Claves` seleccionar `Agregar clave | Crear nueva clave`.
+* Dejar `JSON` en el tipo de clave.
+* Seleccionar `Crear`. A continuación se descargará la clave privada.
 
 .Creación Service Account Key for pull/push on Container Registry
 image::cloud-containers-registry-key-create.png[role="thumb", align="center"]
@@ -150,7 +146,7 @@ docker build -t gcr.io/$GOOGLE_CLOUD_PROJECT/petclinic:1.0 .
 
  
 [start=2]
-. A continuación vamos a publicar con `docker push`: habilita la API de Container Registry en tu proyecto GCP
+. A continuación vamos a publicar con `docker push`: habilita la API de Container Registry en tu proyecto GCP, accediendo en el menú a Contaner Registry > Images:
 
 .Habilitar la API Container Registry
 image::container-registry-habilitar-api.png[role="thumb", align="center"]
@@ -188,11 +184,13 @@ Para arreglarlo, habrá que copiar en la máquina de despliegue el archivo de cr
 [source, bash]
 ----
 # Compiamos el archivo de credenciales
-scp ./secret/file.json ubuntu@DNS_MAQUINA_DEPLOY:~/file.json
+scp ./secret/file.json ubuntu@DNS_MAQUINA_DEPLOY:~/keyfile.json
 # Conectamos a la máquina de despliegue
 ssh ubuntu@DNS_MAQUINA_DEPLOY
 # Autenticamos docker contra Container Registry
 cat keyfile.json | docker login -u _json_key --password-stdin https://gcr.io
+# Variable de entorno con el nombre del proyecto
+GOOGLE_CLOUD_PROJECT=cnsa-2022-user123
 # ejecutamos el contenedor desde gcr.io
 docker run -d -p 8080:8080 -t --name petclinic gcr.io/$GOOGLE_CLOUD_PROJECT/petclinic:1.0
 ----
@@ -215,6 +213,20 @@ Para solucionarlo, bien detén el proceso java que está corriendo con la aplica
 ----
 docker run -p 80:8080 -t --name petclinic gcr.io/$GOOGLE_CLOUD_PROJECT/petclinic:1.0
 ----
+
+Pero ten en cuenta que si el contenedor ya se ha creado y no ha podido iniciarse porque el puerto 8080 estaba ocupado, si intentas volver a crearlo con `docker run` te dirá que el contenedor ya existe. Revisa si está ya creado y en ese caso inicialó. 
+
+[source, bash]
+----
+ubuntu@web-deploy-vm-tf:~$ docker ps -a
+CONTAINER ID   IMAGE                            COMMAND                CREATED              STATUS    PORTS     NAMES
+6e174d959f3b   gcr.io/cnsa-2022/petclinic:1.0   "java -jar /app.jar"   About a minute ago   Created             petclinic
+
+ubuntu@web-deploy-vm-tf:~$ docker start petclinic
+petclinic
+----
+
+Ya puedes comprobar en tu navegador que la aplicación PetClinic se está ejecutando en el puerto 8080 de la máquina de despliegue.
 
 == Integración y despliegue continuo
 
@@ -268,7 +280,7 @@ pipeline {
         script {
           dockerImage = docker.build(
             "${env.CONTAINER_REGISTRY}/${env.GOOGLE_CLOUD_PROJECT}/petclinic:${env.BUILD_ID}",
-            "-f Dockerfile ."
+            "--rm -f Dockerfile ."
           )
         } 
       }
@@ -276,6 +288,11 @@ pipeline {
   }
 }
 ----
+
+[TIP]
+====
+Si consultas la salida por consola de la ejecución del pipeline, verás que se algunas tareas se repiten dos veces, como por ejemplo la ejecución de los tests. ¿Por qué crees que es debido? ¿Podría eliminarse alguna fase del pipeline?
+====
 
 Para probar que la imagen del contenedor se ha creado bien, añade esta fase que hace un despliegue en un entorno de "Staging" o "Testing", que en este tutorial va a ser "local" en la propia máquina de Jenkins, es decir, ejecuta un contenedor basado en la imagen que acabamos de crear: 
 
@@ -366,17 +383,21 @@ Estas acciones debemos añadirlas a un `stage` del pipeline de Jenkins que se en
 ----
     stage('Deploy to Production') {
       steps{
+        // Check to manual approving deploy to production.
+        // It implemenents Continuous Delivery instead of Continuous Deployment
+        input message: "Proceed Deploy to Production?" <1>
         sh '''
-          ssh -i ~/.ssh/id_rsa_deploy ubuntu@DNS_DEPLOY_INSTANCE "if docker ps -q --filter name=petclinic | grep . ; then docker stop petclinic ; fi" <1>
-          ssh -i ~/.ssh/id_rsa_deploy ubuntu@DNS_DEPLOY_INSTANCE "if docker ps -a -q --filter name=petclinic | grep . ; then docker rm -fv petclinic ; fi" <2>
-          ssh -i ~/.ssh/id_rsa_deploy ubuntu@DNS_DEPLOY_INSTANCE "docker run -d -p 80:8080 -t --name petclinic ${CONTAINER_REGISTRY}/${GOOGLE_CLOUD_PROJECT}/petclinic:latest" <3>
+          ssh -i ~/.ssh/id_rsa_deploy ubuntu@DNS_DEPLOY_INSTANCE "if docker ps -q --filter name=petclinic | grep . ; then docker stop petclinic ; fi" <2>
+          ssh -i ~/.ssh/id_rsa_deploy ubuntu@DNS_DEPLOY_INSTANCE "if docker ps -a -q --filter name=petclinic | grep . ; then docker rm -fv petclinic ; fi" <3>
+          ssh -i ~/.ssh/id_rsa_deploy ubuntu@DNS_DEPLOY_INSTANCE "docker run -d -p 80:8080 -t --name petclinic ${CONTAINER_REGISTRY}/${GOOGLE_CLOUD_PROJECT}/petclinic:latest" <4>
         '''
       }
     }    
 ----
-<1> Ejecuta en la instancia de despliegue el comando `docker stop` que detiene el contenedor `petclinic` en caso de que ya se estuviera ejecutando de un despliegue anterior. Esto se comprueba con `docker ps ...`.
-<2> Ejecuta en la instancia de despliegue el comando `docker rm` que elimina el contenedor `petclinic` en caso de que exista de un despliegue anterior. Esto se comprueba con `docker ps -a ...`. Estos dos pasos, primero parar el contenedor y luego eliminar el contenedor, son necesarios antes de volver a lanzar un nuevo contenedor con el mismo nombre. Se ejecuta en dos pasos para evitar errores en caso de que el contenedor exista pero no esté en ejecución, lo que podría dar lugar a un error en el despliegue.
-<3> Ejecuta en la instancia de despliegue el comando para ejecutar el contenedor basado en la última versión de la imagen, lanzándolo con `-d` que indica modo _detached_ que ejecuta el contenedor en background, para que el pipeline finalice y el contenedor permanezca en ejecución.
+<1> Pide confirmación al usuario, que tendrán que pulsar un botón de _Proceed_ para continuar la ejecución del pipeline. Permite asegurar que el despliegue a producción requiere intervención de una persona, implementando entrega continua (continuous delivery) en lugar de despliegue continuo (continuous deployment).
+<2> Ejecuta en la instancia de despliegue el comando `docker stop` que detiene el contenedor `petclinic` en caso de que ya se estuviera ejecutando de un despliegue anterior. Esto se comprueba con `docker ps ...`.
+<3> Ejecuta en la instancia de despliegue el comando `docker rm` que elimina el contenedor `petclinic` en caso de que exista de un despliegue anterior. Esto se comprueba con `docker ps -a ...`. Estos dos pasos, primero parar el contenedor y luego eliminar el contenedor, son necesarios antes de volver a lanzar un nuevo contenedor con el mismo nombre. Se ejecuta en dos pasos para evitar errores en caso de que el contenedor exista pero no esté en ejecución, lo que podría dar lugar a un error en el despliegue.
+<4> Ejecuta en la instancia de despliegue el comando para ejecutar el contenedor basado en la última versión de la imagen, lanzándolo con `-d` que indica modo _detached_ que ejecuta el contenedor en background, para que el pipeline finalice y el contenedor permanezca en ejecución.
 
 [TIP]
 ====
@@ -387,6 +408,7 @@ docker rm $(docker ps -a -q)
 # Remove all images
 docker rmi $(docker images -q)
 ```
+Usalos si te aparece algun mensaje de error del tipo `no space left on device`, ya que la máquina Jenkins están construyendo muchas imágenes y se queda sin espacio de disco.
 ====
   
 La aplicación PetClinic debe estar accesible _en producción_, en el puerto 8080 en la instancia de despliegue. Para asegurarnos, debemos problarlo "manualmente". Para automatizar esta prueba _en producción_, lo adecuado de nuevo sería realizar unos tests end-to-end, con https://www.selenium.dev[Selenium]. Esto se explicará en otra actividad, dedicada al testing.
@@ -425,10 +447,12 @@ El pipeline completo, con todas sus fases, debe quedar así:
 .Pipeline completo
 image::jenkins-petclinic-full-pipeline.png[role="thumb", align="center"]
 
+[IMPORTANT]
+====
 *ENHORABUENA!!!* Has conseguido definir un pipeline completo de integración y despliegue continuos, y con contenedores. Este proceso se puede aplicar, con pequeñas adaptaciones, a cualquier otro proyecto Java basados en Maven. 
 
 Si usas otras tecnologías, como NodeJs, hay que adaptar cada una de las fases a su equivalente en en la tecnología concreta. Vamos a ver como hacerlo con NodeJs en la siguiente sección.
-
+====
 
 ****
 Referencias
