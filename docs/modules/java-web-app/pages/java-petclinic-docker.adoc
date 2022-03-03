@@ -6,13 +6,29 @@ A continuación se describe cómo crear un contenedor Docker de la aplicación P
 
 == Creación del `Dockerfile`
 
-Para https://spring.io/guides/gs/spring-boot-docker/[crear el contendedor de Docker] que empaquete la aplicación PetClinic, vamos a definir el siguiente archivo `Dockerfile` que debe estar en la carpeta raíz del proyecto:
+Para construir aplicaciones Maven con Docker y luego https://spring.io/guides/gs/spring-boot-docker/[crear el contendedor de Docker] que empaquete la aplicación PetClinic, la opción recomendada es usar Multi-Stage Builds en tu Dockerfile, de manera que:
+
+* Una primera fase construye el `.jar` a partir de una imagen de Maven, como por ejemplo `maven:3.8.4-openjdk-11-slim`
+* Y luego ese `.jar` lo copias en el contenedor basado en la imagen OpenJDK-11, que es el que nos interesa.
+
+Vamos a definir el siguiente archivo `Dockerfile` que debe estar en la carpeta raíz del proyecto:
 
 .Dockerfile
 [source, docker]
 ----
+FROM maven:3.8.4-openjdk-11-slim AS build <1>
+WORKDIR /app
+# First copy only the pom file. This is the file with less change
+COPY ./pom.xml .
+# Download the package and make dependencies cached in docker image
+RUN mvn -B -f ./pom.xml -s /usr/share/maven/ref/settings-docker.xml clean dependency:go-offline
+# Copy the actual code
+COPY ./ .
+# Then build the code
+RUN mvn -B -f ./pom.xml -s /usr/share/maven/ref/settings-docker.xml clean package 
+
 # Start with a base image containing Java runtime
-FROM openjdk:11-jdk-alpine
+FROM openjdk:11-jdk-alpine <2>
 # Make port 8080 available to the world outside this container
 EXPOSE 8080
 # The application's jar file
@@ -22,23 +38,11 @@ COPY ${JAR_FILE} app.jar
 # Run the jar file
 ENTRYPOINT ["java","-jar","/app.jar"]
 ----
+<1> Primera fase o _stage_ de _build_, construye la aplición llamando a los goals `clean package` de Maven. Contiene los pasos básicos para construir una aplicación Java basada en Maven. Dicha construcción la divide en dos partes, primero copia el `pom.xml` y descarga las dependencias con `dependency:go-offline`, y luego copia todos los fuentes y construye el proyecto con `package`. De esta forma se optimiza la reconstrucción del contenedor ya que la descarga de dependencias es una etapa que dura varios minutos. 
 
-El Dockerfile es muy sencillo, contiene los pasos básicos para ejecutar una aplicación String Boot en un contenedor: partiendo de una imagen de `openjdk`, copia el archivo `target/*.jar` en el contenedor con el nombre `app.jar` y lo ejecuta mediante el comando `ENTRYPOINT` para que no haya ninguna shell sobre el proceso `java`. 
+<2> Segunda fase, crea una imagen con el entorno de ejecución de Java 11 y el empaquetado `.jar` de la aplicación PetClinic. Contiene los pasos básicos para ejecutar una aplicación String Boot en un contenedor: partiendo de una imagen de `openjdk`, copia el archivo `target/*.jar` en el contenedor con el nombre `app.jar` y lo ejecuta mediante el comando `ENTRYPOINT` para que no haya ninguna shell sobre el proceso `java`. 
 
-Puedes construir la imagen del contenedor:
-
-. Construye el proyecto PetClinic con maven en tu equipo local:
-
-[source, bash]
-----
-./mvnw clean package
-----
-
-.Resultado de la construcción local con Maven
-image::mvn-package-petclinic.png[role="thumb", align="center"]
-
-[start=2]
-. Construye el contenedor con `docker build`:
+. Construye el contenedor con `docker build`, ten paciencia, tardará varios minutos:
 
 [source, bash]
 ----
@@ -51,6 +55,17 @@ image::docker-build-petclinic.png[role="thumb", align="center"]
 [TIP]
 ====
 Para trabajar con contenedores Docker en tu equipo local, debes tener Docker instalado. Recuerda iniciar Docker Desktop en Windows, o iniciar el servicio Docker en Linux o Mac. Comprueba que está funcionado ejecutando el comando `docker ps`
+====
+
+[WARNING]
+====
+Si estás trabajando en Windows, la https://forums.docker.com/t/formatting-violations-found-in-the-java-files-when-docker-run/119576[construcción da un error] por problemas de codificación de los saltos de línea diferentes entre Windows y Linux. Para resolverlo, sustituye en la primera fase del Dockerfile la linea de construcción que llama a `package` por estas dos: 
+[source, docker]
+----
+# Then build the code - On Windows
+RUN mvn -B -f ./pom.xml -s /usr/share/maven/ref/settings-docker.xml clean spring-javaformat:apply --no-transfer-progress
+RUN mvn -B -f ./pom.xml -s /usr/share/maven/ref/settings-docker.xml package --no-transfer-progress
+----
 ====
 
 Prueba la ejecución del contenedor en local: 

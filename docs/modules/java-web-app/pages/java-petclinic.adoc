@@ -13,7 +13,7 @@ Recordemos que *Maven* es una herramienta software para la gestión y construcci
 Para el proyecto PetClinic, en tu máquina de desarrollo local puedes construir el `.jar` (empaquetado) y ejecutarlo:
 [IMPORTANT]
 ====
-Requiere JDK 11 en la máquina local.
+Requiere JDK 11 en la máquina local. Si estás en Windows y tienes varias instalaciones, https://www.happycoders.eu/java/how-to-switch-multiple-java-versions-windows/[cambia la version de Java] predeterminada a la 11. 
 ====
 
 [source,bash]
