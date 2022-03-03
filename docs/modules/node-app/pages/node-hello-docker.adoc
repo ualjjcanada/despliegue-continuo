@@ -2,7 +2,7 @@
 // Aplicación NodeJs con Docker
 ////
 
-= _Hola_Mundo_ en NodeJs con Docker
+= _Hola_Mundo_ en Node.js con Docker
 
 Para realizar el despliegue de la app Hola Mundo en NodeJs como un contenedor, primero tenemos que https://nodejs.org/fr/docs/guides/nodejs-docker-webapp/[dockerizar] la aplicación. Una vez construido el contenedor, habrá que publicar la imagen de contenedor en un registro como Google Container Registry, y por último ejecutar el contenedor en la instancia de despliegue.
 
