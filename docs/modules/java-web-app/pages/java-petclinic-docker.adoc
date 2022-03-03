@@ -4,16 +4,16 @@ Para realizar el despliegue de PetClinic como contenedor, primero tenemos que ht
 
 A continuación se describe cómo crear un contenedor Docker de la aplicación PetClinic. Los pasos se realizan en local, y al final configuraremos el pipeline de Jenkins para que se realicen automáticamente. 
 
-== Creación del `Dockerfile`
+== Creación del `Dockerfile` multi-stage
 
-Para construir aplicaciones Maven con Docker y luego https://spring.io/guides/gs/spring-boot-docker/[crear el contendedor de Docker] que empaquete la aplicación PetClinic, la opción recomendada es usar Multi-Stage Builds en tu Dockerfile, de manera que:
+Para construir aplicaciones Maven con Docker y luego https://spring.io/guides/gs/spring-boot-docker/[crear el contendedor de Docker] que empaquete la aplicación, la opción recomendada es usar *Multi-Stage Builds* en tu Dockerfile, de manera que:
 
 * Una primera fase construye el `.jar` a partir de una imagen de Maven, como por ejemplo `maven:3.8.4-openjdk-11-slim`
-* Y luego ese `.jar` lo copias en el contenedor basado en la imagen OpenJDK-11, que es el que nos interesa.
+* Y luego ese `.jar` lo copia en el contenedor basado en la imagen OpenJDK-11, que es el entorno de ejecución Java necesario.
 
-Vamos a definir el siguiente archivo `Dockerfile` que debe estar en la carpeta raíz del proyecto:
+Vamos a definir el siguiente archivo `Dockerfile` que debe estar en la carpeta raíz del proyecto PetClinic:
 
-.Dockerfile
+.Dockerfile multi-stage
 [source, docker]
 ----
 FROM maven:3.8.4-openjdk-11-slim AS build <1>
@@ -42,7 +42,7 @@ ENTRYPOINT ["java","-jar","/app.jar"]
 
 <2> Segunda fase, crea una imagen con el entorno de ejecución de Java 11 y el empaquetado `.jar` de la aplicación PetClinic. Contiene los pasos básicos para ejecutar una aplicación String Boot en un contenedor: partiendo de una imagen de `openjdk`, copia el archivo `target/*.jar` en el contenedor con el nombre `app.jar` y lo ejecuta mediante el comando `ENTRYPOINT` para que no haya ninguna shell sobre el proceso `java`. 
 
-. Construye el contenedor con `docker build`, ten paciencia, tardará varios minutos:
+Construye el contenedor con `docker build`, y ten paciencia, tardará varios minutos!!!
 
 [source, bash]
 ----
@@ -68,7 +68,7 @@ RUN mvn -B -f ./pom.xml -s /usr/share/maven/ref/settings-docker.xml package --no
 ----
 ====
 
-Prueba la ejecución del contenedor en local: 
+Tras la construcción de la imagen, prueba la ejecución del contenedor en local: 
 
 [source, bash]
 ----
