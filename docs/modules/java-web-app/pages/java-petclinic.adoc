@@ -1,6 +1,6 @@
-= Aplicación web Java
+= PetClinic
 
-== Ejemplo PetClinic. Construcción y ejecución en local
+== Construcción y ejecución en local
 
 Una vez que hemos configurado correctamente nuestro entorno de CI/CD con Jenkins, vamos a estudiar varios ejemplos tanto en Java como en NodeJs. Para comprender los ejemplos, primero los vamos a construir y ejecutar en local, para después  automatizar el proceso de construcción y despliegue con Jenkins.
 
