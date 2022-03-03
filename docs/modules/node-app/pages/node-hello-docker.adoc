@@ -184,8 +184,8 @@ pipeline {
   }
       
   tools {
-    // In Global tools configuration, install Node configured as "nodejs 13"
-    nodejs "nodejs 13"
+    // In Global tools configuration, install Node configured as "nodejs"
+    nodejs "nodejs"
   }
 
   stages {

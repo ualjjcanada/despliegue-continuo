@@ -2,7 +2,7 @@
 // Ejemplo 2: Hola Mundo en NodeJs
 ////
 
-= _Hola mundo_ en NodeJs
+= _Hola mundo_ en Node.js
 
 A continuación se muestra un ejemplo de *integración y despliegue continuos en Jenkins de un proyecto NodeJs*. Los pasos a realizar son similares al ejemplo anterior con Java, el decir, el pipeline tendrá las mismas fases; eso si, adaptaremos las ordenes o comandos a ejecutar a la tecnología NodeJs.
 

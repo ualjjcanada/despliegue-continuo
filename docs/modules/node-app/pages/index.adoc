@@ -1,4 +1,4 @@
-= Aplicación en NodeJS
+= Aplicación en Node.js
 
 ////
 COLOCA A CONTINUACION LOS OBJETIVOS
@@ -7,7 +7,7 @@ COLOCA A CONTINUACION LOS OBJETIVOS
 
 .Objetivos
 ====
-Como construir y desplegar apliaciones web NodeJS con Jenkins
+Como construir y desplegar apliaciones web Node.js con Jenkins
 
 . Definir un pipeline con las estapas más habituales en CI/CD
 . Dockerizar la aplicacion web Java para facilitar su despliegue
