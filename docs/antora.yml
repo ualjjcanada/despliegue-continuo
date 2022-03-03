@@ -7,4 +7,5 @@ nav:
 - modules/prerrequisitos/nav.adoc
 - modules/infraestructura/nav.adoc
 - modules/jenkinsdocker/nav.adoc
+- modules/java-web-app/nav.adoc
 
