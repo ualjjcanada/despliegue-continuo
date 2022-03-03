@@ -426,14 +426,3 @@ Referencias
 . https://stackoverflow.com/questions/54573068/pushing-docker-image-through-jenkins[Pushing docker image through jenkins] @ StackOverflow
 
 ****
-
-////
-// Ejemplo 2: Hola Mundo en NodeJs
-////
-
-include::node-example.adoc[]
-
-////
-// Aplicación NodeJs con Docker
-////
-include::node-pipeline.adoc[]
