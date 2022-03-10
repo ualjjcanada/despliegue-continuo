@@ -15,13 +15,18 @@ La implementación de la integración y despliegue continuos permitirá que, par
 == Construcción y ejecución en local
 
 Nos vamos a basar en  el proyecto _HelloWorld_ en NodeJs, disponible en https://github.com/ualcnsa/nodeapp. Necesitarás poder hacer cambios sobre el mismo, así que crea un _fork_ y trabaja con tu _fork_ a partir de ahora. 
+Tras clonar tu _fork_ a local, haz checkout del tag `v0.1` en una nueva rama cuyo nombre sea tu usuario de la UAL, para que tus archivos estén en el estado inicial de este tutorial: 
+
+ git checkout tags/v0.1 -b <branch> <1>
+
+<1> Usa tu nombre de usuario de la UAL como nombre de la rama.
 
 Veamos los archivos que componen la aplicación: 
 
 . El archivo `package.json` contienen información básica de la aplicación y las dependencias: 
 
 - *express*: Node framework
-- *jest*: framework de testing para NodeJs (existen numerosos framework de testing en NodeJs, como Jasmin, Mocha, Tape, etc.)
+- *jest*: framework de testing para NodeJs (existen numerosos framework de testing en NodeJs, como Jasmine, Mocha, Tape, etc.)
 - *supertest*: proporciona abstracción a alto nivel para testing HTTP
 
 [source,json]
@@ -47,6 +52,14 @@ Veamos los archivos que componen la aplicación:
    }
 }
 ----
+
+[IMPORTANT]
+====
+Comprueba que los archivos `main.js`, `app.js` y  `app.test.js`, así como la carpeta `services`, estén dentro de una carpeta `src`. Si no es así, crea la carpeta `src` y muevelos dentro. Revisa el conetenido de `package.json` para que sea idéntico al mostrado aquí.
+
+.Archivos y carpetas en el estado inicial
+image::node-files-initial-point.png[role="thumb", align="center"]
+====
 
 Para instalar las dependencias ejecuta `npm install`.
 
@@ -169,7 +182,7 @@ describe("GET /John", () => {
 Para ejecutar los tests: `npm test`
 
 .npm test
-image::node-mocha-passed.png[role="thumb", align="center"]
+image::node-jest-passed.png[role="thumb", align="center"]
 
 == Creación del pipeline en Jenkins
 
