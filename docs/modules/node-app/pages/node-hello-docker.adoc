@@ -33,7 +33,7 @@ RUN npm install
 COPY . .
 
 EXPOSE 3000
-CMD [ "node", "index.js" ]
+CMD [ "npm", "start" ]
 ----
 
 El Dockerfile es muy sencillo, contiene los https://nodejs.org/fr/docs/guides/nodejs-docker-webapp/#creating-a-dockerfile[pasos básicos] para ejecutar una aplicación en un contenedor.

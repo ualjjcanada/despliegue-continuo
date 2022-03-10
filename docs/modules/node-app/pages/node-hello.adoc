@@ -21,29 +21,29 @@ Veamos los archivos que componen la aplicación:
 . El archivo `package.json` contienen información básica de la aplicación y las dependencias: 
 
 - *express*: Node framework
-- *mocha*: framework de testing para NodeJs (existen numerosos framework de testing en NodeJs, como Jasmin, Jest, Tape, etc.)
+- *jest*: framework de testing para NodeJs (existen numerosos framework de testing en NodeJs, como Jasmin, Mocha, Tape, etc.)
 - *supertest*: proporciona abstracción a alto nivel para testing HTTP
 
 [source,json]
 .package.json
 ----
 {
-   "name": "node-app",
-   "description": "hello jenkins test app",
-   "version": "0.0.1",
-   "private": true,
-   "directories": {
-      "test": "test"
-    },
+  "name": "nodeapp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/main.js",
     "scripts": {
-      "test": "mocha"
+    "start": "node src/main",
+    "test": "jest"
     },
+  "author": "",
+  "license": "ISC",
    "dependencies": {
-      "express": "^4.17.1"
+    "express": "^4.17.3"
    },
    "devDependencies": {
-      "mocha": "^7.1.1",
-      "supertest": "^4.0.2"
+    "jest": "^27.5.1",
+    "supertest": "^6.2.2"
    }
 }
 ----
@@ -51,46 +51,122 @@ Veamos los archivos que componen la aplicación:
 Para instalar las dependencias ejecuta `npm install`.
 
 [start=2]
-. El archivo raíz del proyecto `index.js` es un sencillo _hola mundo_.
+. El archivo principal del proyecto `src/main.js` se encarga de arrancar la aplicación en el puerto 3000.
 
 [source,js]
-.index.js
+.src/main.js
 ----
-//importing node framework
-var express = require('express');
- 
-var app = express();//Respond with "hello world" for requests that hit our root "/"
-
-app.get('/', function (req, res) {
- res.send('hello world');
-});//listen to port 3000 by default
-app.listen(process.env.PORT || 3000);
- 
-module.exports = app;
+const app = require("./app");
+const port = 3000
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`)
+})
 ----
 
-Para ejecutar la aplicación, ejecuta: `node index.js`
-
-Puedes ver la aplicación en el navegador accediendo a http://localhost:3000[http://localhost:3000]
-
-*Primer test*
-
-Nuestro primer test va a navegar a la raiz de la aplicación (`/`) y verificar que la página responde con el texto esperado `hello world`.
-
-Se guardará en la carpeta `/test/` con el nombre `test.js`. 
+[start=3]
+. El archivo `src/app.js` es un sencillo _hola mundo_ con dos rutas:
+  - `/` devuelve `"Hello World!"`
+  - `/:nameToSalute` devuelve `"Hello " + nameToSalute + "!"` mediante el servicio `HelloWordService`
 
 [source,js]
-.test/test.js
+.src/app.js
 ----
-var request = require('supertest');
-var app = require('../index.js');describe('GET /', function() {
- it('respond with hello world', function(done) { //navigate to root and check the the response is "hello world"
- request(app).get('/').expect('hello world', done);
- });
+const express = require('express')
+const HelloWordService = require( "./services/hello-world" );
+
+const app = express()
+
+app.get('/', (req, res) => {
+  res.send('Hello World!')
+})
+
+app.get('/:nameToSalute', (req, res) => {
+  res.send(new HelloWordService().greet(req.params.nameToSalute));
+})
+
+module.exports = app
+----
+
+[start=4]
+. El archivo `src/services/hello-world.js` es un servicio de _hola mundo_.
+
+[source,js]
+.src/services/hello-world.js
+----
+class HelloWordService {
+  /**
+    * @description Create an instance of HelloWordService
+    */
+  constructor () {
+    
+  }
+
+  /**
+    * @description Says Hello to a given name
+    * @param nameToHello {string} Name to greet
+    * greet name
+    * @returns a string that starts with Hello
+    */
+  greet ( nameToHello ) {
+
+      return "Hello " + nameToHello+"!";
+    
+  }
+}
+
+module.exports = HelloWordService;
+----
+
+Para ejecutar la aplicación, ejecuta: `npm start`
+
+Puedes ver la aplicación en el navegador accediendo a http://localhost:3000[http://localhost:3000] o a http://localhost:3000/nombre[http://localhost:3000/nombre]
+
+*Test unitarios y end2end*
+
+En primer lugar tenemos un *test unitario* para probar el servicio `HelloWorldService` que comprueba que la salida sea la esperada.
+
+Se guardará en la carpeta `src/services/` con el nombre `hello-world.test.js`. 
+
+[source,js]
+.src/services/hello-world.test.js
+----
+const HelloWordService = require("./hello-world");
+
+describe("HelloWordService Test", () => {
+  const helloWordService = new HelloWordService();
+
+  it("says 'Hello John!' to greet John", () => {
+    expect(helloWordService.greet("John")).toBe("Hello John!");
+  });
+
 });
 ----
 
-Para ejecutar el test: `npm test`
+En segundo lugar tenemos varios *test end2end*. El primer test va a navegar a la raiz de la aplicación (`/`) y verificar que la página responde con el texto esperado `Hello World!`. El segundo test navega a `/John` y comprueba que la página responde con `Hello John!`.
+
+[source,js]
+.src/app.test.js
+----
+const request = require("supertest");
+
+const app = require("./app");
+
+describe("GET /", () => {
+    //navigate to root and check the the response is "Hello World!"
+    it('responds with "Hello World!"', (done) => { 
+        request(app).get('/').expect('Hello World!', done);
+    });
+});
+
+describe("GET /John", () => {
+    //navigate to /John and check the the response is "Hello John!"
+    it('responds with "Hello John!"', (done) => { 
+        request(app).get('/John').expect('Hello John!', done);
+    });
+});
+----
+
+Para ejecutar los tests: `npm test`
 
 .npm test
 image::node-mocha-passed.png[role="thumb", align="center"]
@@ -143,20 +219,27 @@ La evolución de las métricas del proyecto es uno de los indicadores que habitu
 [source,json]
 .package.json: jenkins-test y dependencia mocha-junit-reporter
 ----
-   ... 
-   "scripts": {
-      "test": "mocha --exit",
-      "test-jenkins": "mocha --reporter mocha-junit-reporter --reporter-options mochaFile=./coverage/test.results.xml --exit" <1>
-   },
-   ...
-   "devDependencies": {
-      "mocha": "^7.1.1",
-      "supertest": "^4.0.2",
-      "mocha-junit-reporter":"1.23.3"  <2>
-   }
+  ... 
+  "scripts": {
+    "start": "node src/main",
+    "test": "jest",
+    "test-jenkins": "jest --reporters=default --reporters=jest-junit", <1>
+  },
+  "jest-junit": { <2>
+    "outputDirectory": "./coverage/",
+    "outputName": "test.results.xml",
+    "usePathForSuiteName": "true"
+  },
+  ...
+  "devDependencies": {
+    "jest": "^27.5.1",
+    "jest-junit": "^13.0.0", <3>
+    "supertest": "^6.2.2"
+  }
 ----
-<1> Añadimos el script `test-jenkins` que define cómo ejecutar los tests y generar los resultados de los test en formato xml, en el archivo `./coverage/test.results.xml`
-<2> Dependencia a `mocha-junit-reporter` que permite generar los resultados de los test en xml.
+<1> Añadimos el script `test-jenkins` que define los formatos de salida de los test: el normal y usando el plugin `jest-junit` para formato xml.
+<2> Configuración para `jest-junit` que genera los resultados de los test en el archivo `./coverage/test.results.xml`
+<3> Dependencia a `jest-junit` que permite generar los resultados de los test en xml.
 
 Podemos probar en local, llamamos a la ejecución de los test y generación del xml: `npm run test-jenkins`. 
 
@@ -217,24 +300,21 @@ A partir de ahora, cuando el repositorio en GitHub reciba un push notificará a 
 
 Como ya sabemos, la cobertura de código nos va a ofrecer un valor directamente relacionado con la calidad de los juegos de prueba. Para obtener la cobertura y publicarla en Jenkins, debemos hacer: 
 
-- Añadir a `package.json` un script para cobertura y la dependencia a https://istanbul.js.org/[IstanbulJS], que permite obtener la cobertura con Mocha.
+- Añadir a `package.json` un script para cobertura que permite obtener la cobertura con Jest.
 
 - Modificar la fase _Test_ de Jenkins para que llame al script de cobertura y publique, en el bloque `post`, el informe de cobertura generado.
 
 1.Modifica `package.json`, añadiendo el nuevo script y la dependencia:
 
 [source,json]
-.package.json: cobertura y dependencia a IstanbulJS
+.package.json: cobertura
 ----
+   ...
    "scripts": {
       ...
-      "coverage-jenkins": "nyc --reporter=html --reporter=text  mocha  --reporter mocha-junit-reporter --reporter-options mochaFile=./coverage/test.results.xml --timeout=3000 --exit"
+      "coverage-jenkins": "jest --reporters=default --reporters=jest-junit --coverage --coverageReporters=text --coverageReporters=html --coverageDirectory=./coverage/"
    },
    ...
-      "devDependencies": {
-      ...
-      "nyc": "^15.0.1"
-   }
 ----
 
 Podemos probar en local, llamamos a la ejecución del script: `npm run coverage-jenkins`. 
@@ -249,12 +329,6 @@ image::node-mocha-coverage-results.png[role="thumb", align="center", width=160]
 
 .Informe de cobertura en html
 image::node-mocha-coverage-index.png[role="thumb", align="center"]
-
-
-[TIP]
-====
-Añade al `.gitignore` la carpeta `/.nyc_output`, ya que su contenido se generará al lanzar la cobertura.
-====
 
 [start=2]
 . Modifica el pipeline de Jenkins, la fase `Test`:
@@ -283,6 +357,11 @@ Añade al `.gitignore` la carpeta `/.nyc_output`, ya que su contenido se generar
 ----
 <1> Llama al nuevo script que calcula la cobertura
 <2> Publica el informe de cobertura
+
+[TIP]
+====
+Instala el HTML Publisher plugin en Jenkins
+====
 
 El resultado en Jenkins, debe aparece un enlace nuevo en el menú de la izquierda: 
 
@@ -316,7 +395,7 @@ Vamos a probar *ESLint*.
 
 . Instala con npm: 
 
-  npm install eslint --save-dev
+  npm install eslint eslint-config-prettier eslint-plugin-prettier --save-dev
 
 . A continuación, inicializa un archivo de configuración: 
 
@@ -329,13 +408,42 @@ image::eslint-init.png[role="thumb", align="center"]
 
 Se habrá creado un archivo `.eslintrc.json`, que incluirá esta línea: 
 
-[source,groovy]
+[source,json]
 ----
 {
     "extends": "eslint:recommended" <1>
 }
 ----
 <1> Habilita las https://eslint.org/docs/rules/[reglas predeterminadas]
+
+En lugar del anterior fichero, puedes utilizar un fichero `.eslintrc.js` como el siguiente, que contiene recomendaciones para express:
+
+[source,javascript]
+----
+module.exports = {
+    env: {
+        es6: true,
+        node: true
+    },
+    extends: ['prettier'],
+    plugins: ['prettier'],
+    globals: {
+        Atomics: 'readonly',
+        SharedArrayBuffer: 'readonly'
+    },
+    parserOptions: {
+        ecmaVersion: 2018,
+        sourceType: 'module'
+    },
+    rules: {
+        'prettier/prettier': 'error',
+        'class-methods-use-this': 'off',
+        'no-param-reassign': 'off',
+        camelcase: 'off',
+        'no-unused-vars': ['error', { argsIgnorePattern: 'next' }]
+    }
+};
+----
 
 [start=3]
 . Añade a `package.json` un script para `lint` y la dependencia a ESLint
@@ -345,12 +453,15 @@ Se habrá creado un archivo `.eslintrc.json`, que incluirá esta línea:
 ----
    "scripts": {
       ...
-      "lint": "eslint *.js test/*.js -f checkstyle -o coverage/eslint-result.xml"
+      "lint": "eslint src/**/*.js -f checkstyle -o coverage/eslint-result.xml"
    },
    ...
    "devDependencies": {
       ...
-      "eslint": "^7.0.0"
+      "eslint": "^8.10.0",
+      "eslint-config-prettier": "^8.5.0",
+      "eslint-plugin-prettier": "^4.0.0",
+      "prettier": "^2.5.1",
    }
    ...
 ----
