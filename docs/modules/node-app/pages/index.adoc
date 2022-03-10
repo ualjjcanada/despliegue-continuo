@@ -9,8 +9,9 @@ COLOCA A CONTINUACION LOS OBJETIVOS
 ====
 Como construir y desplegar apliaciones web Node.js con Jenkins
 
-. Definir un pipeline con las estapas más habituales en CI/CD
-. Dockerizar la aplicacion web Java para facilitar su despliegue
-. Desplegar la aplicación Java tanto de forma nativa como mediante contenedor
+. Dockerizar la aplicacion Node.js para facilitar su despliegue
+. Desplegar la aplicación Node.js tanto de forma nativa como mediante contenedor
+. Definir un pipeline para automatizar las etapas más habituales en CI/CD
+
 ====
 

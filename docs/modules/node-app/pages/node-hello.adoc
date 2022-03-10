@@ -4,9 +4,9 @@
 
 = _Hola mundo_ en Node.js
 
-A continuación se muestra un ejemplo de *integración y despliegue continuos en Jenkins de un proyecto NodeJs*. Los pasos a realizar son similares al ejemplo anterior con Java, el decir, el pipeline tendrá las mismas fases; eso si, adaptaremos las ordenes o comandos a ejecutar a la tecnología NodeJs.
+A continuación se muestra un ejemplo de *integración y despliegue continuos en Jenkins de un proyecto NodeJs*. Los pasos a realizar son similares al ejemplo anterior con Java, el decir, el pipeline tendrá las mismas fases; eso si, adaptaremos las ordenes o comandos a ejecutar a la tecnología Node.js.
 
-Al igual con el ejemplo anterior en Java, en primer lugar trabajaremos con la aplicación NodeJS sin _dockerizar_, y después _dockerizaremos_ la aplicación. La mayoría de los pasos siempre los ejecutaremos primero en local, y tras comprobar que funcionan correctamente, los automatizaremos en Jenkins. 
+Al igual con el ejemplo anterior en Java, en primer lugar trabajaremos con la aplicación Node.js sin _dockerizar_, y después _dockerizaremos_ la aplicación. La mayoría de los pasos siempre los ejecutaremos primero en local, y tras comprobar que funcionan correctamente, los automatizaremos en Jenkins. 
 
 ****
 La implementación de la integración y despliegue continuos permitirá que, para cada cambio de código en el repositorio, Jenkins será notificado y descargará los cambios, instalará las dependencias y ejecutará los tests. Si los tests pasan correctamente, Jenkins desplegará la aplicación en el servidor de despliegue. Y si fallan, se notificará al desarrollador.
@@ -14,7 +14,7 @@ La implementación de la integración y despliegue continuos permitirá que, par
 
 == Construcción y ejecución en local
 
-Nos vamos a basar en  el proyecto _HelloWorld_ en NodeJs, disponible en https://github.com/ualcnsa/nodeapp. Si deseas poder hacer cambios sobre el mismo, crea un _fork_ y trabaja con tu _fork_ a partir de ahora. 
+Nos vamos a basar en  el proyecto _HelloWorld_ en NodeJs, disponible en https://github.com/ualcnsa/nodeapp. Necesitarás poder hacer cambios sobre el mismo, así que crea un _fork_ y trabaja con tu _fork_ a partir de ahora. 
 
 Veamos los archivos que componen la aplicación: 
 
