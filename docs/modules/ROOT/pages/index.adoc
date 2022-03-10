@@ -4,7 +4,7 @@ Nombre y título del trabajo
 = Despliegue continuo con Jenkins
 :navtitle: Introducción
 
-Computación en la Nube, Servicios y Aplicaciones. Joaquín Cañadas <jjcanada@ual.es>, Francisco García <paco.garcía@ual.es>
+Computación en la Nube, Servicios y Aplicaciones. Joaquín Cañadas <jjcanada@ual.es>, Francisco García <paco.garcia@ual.es>
 
 _Version_ *{page-component-display-version}*
 
