@@ -184,6 +184,8 @@ Para ejecutar los tests: `npm test`
 .npm test
 image::node-jest-passed.png[role="thumb", align="center"]
 
+Si todo funciona correctamenente, haz **commit** y **push** de tu rama. 
+
 == Creación del pipeline en Jenkins
 
 Definimos un nuevo proyecto tipo Pipeline. Añadimos la descripción del pipeline:
@@ -201,7 +203,7 @@ pipeline {
   stages {
     stage('Cloning Git') {
       steps {
-        git 'https://github.com/ualcnsa/nodeapp'
+        git branch: 'MI_RAMA', url: 'https://github.com/MI_USUARIO/nodeapp' <1>
       }
     }
         
@@ -219,6 +221,7 @@ pipeline {
   }
 }
 ----
+<1> Cambia el nombre de la rama y la URL del repositorio por las tuyas. 
 
 El resultado sera:
 
@@ -261,6 +264,8 @@ Podemos probar en local, llamamos a la ejecución de los test y generación del 
 Añade al `.gitignore` la carpeta `/coverage`, ya que su contenido se generará al lanzar los tests y no se debe guardar en el repositorio.
 ====
 
+Guarda los cambios en el repositorio, para que estén actualizados cuando los lea  Jenkins.
+
 [start=2]
 . Actualizamos el pipeline, la fase `Test`:
 
@@ -283,9 +288,9 @@ Guardamos los cambios. Tras un par de ejecuciones del build, se visualiza el gr�
 .Publicado el gráfico de tendencia de los test
 image::jenkins-nodeapp-pipeline-test-result-trend.png[role="thumb", align="center"]
 
-.*Webhook*: ejecución automática del build en Jenkins tras un push en GitHub
-****
-Configura en GitHub un nuevo _Webhook_ para que tras cada cambio de código en el repositorio, Jenkins sea notificado y lance la construcción del pipeline:
+== *Webhook* para construcción automática
+
+Configura en GitHub un nuevo _Webhook_ para que tras cada cambio de código en el repositorio, Jenkins sea notificado y lance automáticamente la construcción del pipeline:
 
 . En GitHub, seleccionamos el repositorio sobre el que queremos activar la construcción en Jenkins y hacemos clic en: _Settings > WebHooks > Add webhook_
 
@@ -304,9 +309,6 @@ image::jenkins-webhook-build-triger.png[role="thumb", align="center"]
 
 
 A partir de ahora, cuando el repositorio en GitHub reciba un push notificará a Jenkins para que lance la construcción automáticamente. 
-
-****
-
 
 
 == Informe de cobertura
