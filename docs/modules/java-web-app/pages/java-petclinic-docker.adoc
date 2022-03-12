@@ -4,6 +4,16 @@ Para realizar el despliegue de PetClinic como contenedor, primero tenemos que ht
 
 A continuación se describe cómo crear un contenedor Docker de la aplicación PetClinic. Los pasos se realizan en local, y al final configuraremos el pipeline de Jenkins para que se realicen automáticamente. 
 
+[TIP]
+====
+Para trabajar con contenedores Docker en tu equipo local, debes tener Docker instalado. Recuerda iniciar Docker Desktop en Windows, o iniciar el servicio Docker en Linux o Mac. Comprueba que está funcionado ejecutando el comando `docker ps`
+====
+
+[IMPORTANT]
+====
+Hasta ahora nos estamos basando en el proyecto _PetClinic_ original (genericamente llamado _upstream_) disponible en https://github.com/spring-projects/spring-petclinic[GitHub]. En esta sección necesitarás poder hacer cambios sobre el mismo, básicamente vamos a añadir al proyecto un archivo `Dockerfile` y un archivo `Jenkinsfile`, así que crea un _fork_ y trabaja con tu _fork_ a partir de ahora. Verás que en los bloques de código de este documento indica como URL del respositorio `https://github.com/ualcnsa/spring-petclinic.git`, que deberás cambiar por la URL de tu repositorio forkeado.
+====
+
 == Creación del `Dockerfile` multi-stage
 
 Para construir aplicaciones Maven con Docker y luego https://spring.io/guides/gs/spring-boot-docker/[crear el contendedor de Docker] que empaquete la aplicación, la opción recomendada es usar https://docs.docker.com/get-started/09_image_best/#multi-stage-builds[*Multi-Stage Builds*] en tu Dockerfile, de manera que:
@@ -11,7 +21,7 @@ Para construir aplicaciones Maven con Docker y luego https://spring.io/guides/gs
 * Una primera fase o _stage_ construye el `.jar` a partir de una imagen de Maven, como por ejemplo `maven:3.8.4-openjdk-11-slim`
 * Y luego en una seguna fase, ese `.jar` lo copia en el contenedor basado en la imagen OpenJDK-11, que es el entorno de ejecución Java necesario.
 
-Vamos a definir el siguiente archivo `Dockerfile` que debe estar en la carpeta raíz del proyecto PetClinic:
+La documentación de PetClinic indica cómo construir el contenedor usando https://github.com/spring-projects/spring-petclinic#building-a-container[Spring Boot build plugin]. A nosotros nos interesa ver cómo hacerlo de forma genérica para cualquier aplicación Java basada en Maven. Vamos a definir el siguiente archivo `Dockerfile` que debe estar en la carpeta raíz del proyecto PetClinic:
 
 .Dockerfile multi-stage
 [source, docker]
@@ -52,20 +62,20 @@ docker build -t petclinic-docker .
 .Docker build
 image::docker-build-petclinic.png[role="thumb", align="center"]
 
-[TIP]
-====
-Para trabajar con contenedores Docker en tu equipo local, debes tener Docker instalado. Recuerda iniciar Docker Desktop en Windows, o iniciar el servicio Docker en Linux o Mac. Comprueba que está funcionado ejecutando el comando `docker ps`
-====
-
 [WARNING]
 ====
 Si estás trabajando en Windows, la https://forums.docker.com/t/formatting-violations-found-in-the-java-files-when-docker-run/119576[construcción da un error] por problemas de codificación de los saltos de línea diferentes entre Windows y Linux. Para resolverlo, sustituye en la primera fase del Dockerfile la linea de construcción que llama a `package` por estas dos: 
 [source, docker]
 ----
-# Then build the code - On Windows
-RUN mvn -B -f ./pom.xml -s /usr/share/maven/ref/settings-docker.xml clean spring-javaformat:apply --no-transfer-progress
+# Then build the code - on Linux <1>
+# RUN mvn -B -f ./pom.xml -s /usr/share/maven/ref/settings-docker.xml clean package
+
+# Then build the code - On Windows <2>
+RUN mvn -B -f ./pom.xml -s /usr/share/maven/ref/settings-docker.xml clean spring-javaformat:apply --no-transfer-progress 
 RUN mvn -B -f ./pom.xml -s /usr/share/maven/ref/settings-docker.xml package --no-transfer-progress
 ----
+<1> Ejecución de maven `package` para la construcción del proyecto cuando ejecutas Docker en Linux. La linea aparece comentada.
+<2> Ejecución de maven `package` para la construcción del proyecto cuando ejecutas Docker en Windows. Las dos lineas se ejecutan (no están comentadas).
 ====
 
 Tras la construcción de la imagen, prueba la ejecución del contenedor en local: 
@@ -398,6 +408,10 @@ Estas acciones debemos añadirlas a un `stage` del pipeline de Jenkins que se en
 <2> Ejecuta en la instancia de despliegue el comando `docker stop` que detiene el contenedor `petclinic` en caso de que ya se estuviera ejecutando de un despliegue anterior. Esto se comprueba con `docker ps ...`.
 <3> Ejecuta en la instancia de despliegue el comando `docker rm` que elimina el contenedor `petclinic` en caso de que exista de un despliegue anterior. Esto se comprueba con `docker ps -a ...`. Estos dos pasos, primero parar el contenedor y luego eliminar el contenedor, son necesarios antes de volver a lanzar un nuevo contenedor con el mismo nombre. Se ejecuta en dos pasos para evitar errores en caso de que el contenedor exista pero no esté en ejecución, lo que podría dar lugar a un error en el despliegue.
 <4> Ejecuta en la instancia de despliegue el comando para ejecutar el contenedor basado en la última versión de la imagen, lanzándolo con `-d` que indica modo _detached_ que ejecuta el contenedor en background, para que el pipeline finalice y el contenedor permanezca en ejecución.
+
+.Proceed deploy to production?
+image::jenkins-proceed-to-deploy-production.png[role="thumb", align="center"]
+
 
 [TIP]
 ====

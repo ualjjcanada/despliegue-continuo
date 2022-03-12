@@ -35,7 +35,7 @@ Creamos el primer proyecto de Jenkins tipo pipeline. Vamos a darle el nombre `he
 
 Copia la siguiente definición de pipeline en el bloque *Pipeline*, *Pipeline script*.
 
-[source,bash,subs="verbatim,quotes"]
+[source,groovy,subs="verbatim,quotes"]
 ----
 pipeline {
     agent any
@@ -90,7 +90,7 @@ Otra alternativa es que el pipeline se ejecute, en lugar de en el nodo master, e
 A continuación creamos el segundo proyecto de Jenkins tipo pipeline. Vamos a darle el nombre `hello-maven-pipeline-on-container-node`
 
 
-[source,bash,subs="verbatim,quotes"]
+[source,groovy,subs="verbatim,quotes"]
 ----
 pipeline {
     agent {
@@ -145,7 +145,7 @@ Otros ejemplos similares con contenedores NodeJS están disponibles en la https:
 
 Es habitual tener varias tecnologías en un mismo proyecto. Por ejemplo, un repositorio puede tener tanto un back-end basado en Java como un front-end basado en JavaScript. Combinar Docker y Pipeline permite usar diferentes agentes en diferentes fases (_stages_) del pipeline: 
 
-[source,bash,subs="verbatim,quotes"]
+[source,groovy,subs="verbatim,quotes"]
 ----
 pipeline {
     agent none

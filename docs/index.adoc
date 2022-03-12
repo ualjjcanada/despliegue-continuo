@@ -35,38 +35,38 @@ Codificación, idioma, tabla de contenidos, tipo de documento
 
 //includes
 :section: ROOT
-:sectionPath: docs/modules/{section}/pages
-:imagesdir: docs/modules/{section}/images
+:sectionPath: modules/{section}/pages
+:imagesdir: modules/{section}/images
 include::{sectionPath}/index.adoc[]
 
 :section: prerrequisitos
-:sectionPath: docs/modules/{section}/pages
-:imagesdir: docs/modules/{section}/images
+:sectionPath: modules/{section}/pages
+:imagesdir: modules/{section}/images
 // Añado index.adoc -> leveloffset=+1 para la indentación de esta sección en concreto
 include::{sectionPath}/index.adoc[leveloffset=+1]
 
 :section: infraestructura
-:sectionPath: docs/modules/{section}/pages
-:imagesdir: docs/modules/{section}/images
+:sectionPath: modules/{section}/pages
+:imagesdir: modules/{section}/images
 include::{sectionPath}/index.adoc[]
 
 :section: jenkinsdocker
-:sectionPath: docs/modules/{section}/pages
-:imagesdir: docs/modules/{section}/images
+:sectionPath: modules/{section}/pages
+:imagesdir: modules/{section}/images
 include::{sectionPath}/index.adoc[]
 include::{sectionPath}/install-jenkins.adoc[leveloffset=+1]
 include::{sectionPath}/first-projects.adoc[leveloffset=+1]
 
 :section: java-web-app
-:sectionPath: docs/modules/{section}/pages
-:imagesdir: docs/modules/{section}/images
+:sectionPath: modules/{section}/pages
+:imagesdir: modules/{section}/images
 include::{sectionPath}/index.adoc[]
 include::{sectionPath}/java-petclinic.adoc[leveloffset=+1]
 include::{sectionPath}/java-petclinic-docker.adoc[leveloffset=+1]
 
 :section: node-app
-:sectionPath: docs/modules/{section}/pages
-:imagesdir: docs/modules/{section}/images
+:sectionPath: modules/{section}/pages
+:imagesdir: modules/{section}/images
 include::{sectionPath}/index.adoc[]
 include::{sectionPath}/node-hello.adoc[leveloffset=+1]
 include::{sectionPath}/node-hello-docker.adoc[leveloffset=+1]

@@ -335,7 +335,7 @@ Como ya sabemos, la cobertura de código nos va a ofrecer un valor directamente 
 Podemos probar en local, llamamos a la ejecución del script: `npm run coverage-jenkins`. 
 
 .Ejecución de cobertura
-image::node-mocha-coverage-jenkins-ok.png[role="thumb", align="center"]
+image::node-jest-coverage-jenkins-ok.png[role="thumb", align="center"]
 
 Como resultado, en la carpeta `coverage` del proyecto se ha generado el informe de cobertura.
 
@@ -343,7 +343,7 @@ Como resultado, en la carpeta `coverage` del proyecto se ha generado el informe 
 image::node-mocha-coverage-results.png[role="thumb", align="center", width=160]
 
 .Informe de cobertura en html
-image::node-mocha-coverage-index.png[role="thumb", align="center"]
+image::node-jest-coverage-index.png[role="thumb", align="center"]
 
 [start=2]
 . Modifica el pipeline de Jenkins, la fase `Test`:
