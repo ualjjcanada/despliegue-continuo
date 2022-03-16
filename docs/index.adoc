@@ -1,7 +1,13 @@
 ////
 EXTRA Asccidoc file  including all modules in the repo
-Generates Asciidoc "native" full document, as classic Asciidoc alone document.
+Generates Asciidoc "native" full document, as classic Asciidoc alone document, enabling pdf generation.
+
+This file could be automatically generated from antora.yml 
+See an exameple here:
+https://github.com/settermjd/antora-nav-to-asciidoctor-pdf-config-line-converter
+
 ////
+
 
 
 ////
