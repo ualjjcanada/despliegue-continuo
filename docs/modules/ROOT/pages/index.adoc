@@ -15,7 +15,7 @@ COLOCA A CONTINUACION LOS OBJETIVOS
 .Objetivos
 ====
 * Crear una infraestructura de CI/CD en GCP con Máquinas Virtuales gestionadas con Terraform
-* Diseñar proyectos Jenkins para la construcción y despliegue automatizado de aplicaciones en Java y NodeJs
+* Diseñar proyectos Jenkins image:jenkins_ci.png[Jenkins, 16, 16] para la construcción y despliegue automatizado de aplicaciones en Java y NodeJs
 ====
 
 .Realización y entrega

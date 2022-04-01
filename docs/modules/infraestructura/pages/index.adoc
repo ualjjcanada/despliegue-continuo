@@ -161,7 +161,7 @@ Ejecuta el comando `terraform apply --auto-approve` para ejecutar la plantilla. 
 
 [WARNING]
 ====
-Si la primera vez que aplicas el plan aparece un mensaje de error`[red]#Error:# ... Error 403: Compute Engine API has not been used in project...` es debido a que aun no se ha  activado la API de Compute Engine  en el proyecto. Haz clic en el enlace del error y activa la API. Espera un par de minutos y vuelve a lanzar terraform.
+Si la primera vez que aplicas el plan aparece un mensaje de [red]#Error:# `... Error 403: Compute Engine API has not been used in project...` es debido a que aun no se ha  activado la API de Compute Engine  en el proyecto. Haz clic en el enlace del error y activa la API. Espera un par de minutos y vuelve a lanzar terraform.
 
 .Habilitar la API de Compute Engine
 image::habilitar-ComputeEngineAPI.png[role="thumb", align="center"]

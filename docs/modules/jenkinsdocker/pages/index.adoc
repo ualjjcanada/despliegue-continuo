@@ -1,4 +1,4 @@
-= Primeros pasos con Jenkins
+= Primeros pasos con Jenkins image:jenkins_ci.png[Jenkins, 16, 16]
 :navtitle: Primeros pasos con Jenkins
 
 ////
