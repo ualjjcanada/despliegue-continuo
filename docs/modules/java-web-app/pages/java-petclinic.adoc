@@ -89,7 +89,7 @@ pipeline {
     stage('Git fetch') { <4>
       steps {
         // Get some code from a GitHub repository
-        git branch:'main', url:'https://github.com/spring-projects/spring-petclinic.git'
+        git branch:'java8', url:'https://github.com/ualcnsa/spring-petclinic.git'
       }
     }
     stage('Compile, Test, Package') { <5>
