@@ -50,14 +50,14 @@ El archivo `*provider.tf*` deberás modificarlo:
 
 variable "gcp_project" {
   # Configurar el nombre del proyecto en GCP
-  default = "cnsa-2022" <1>
+  default = "cnsa-2024" <1>
 }
 
 terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "4.11.0"
+      version = "5.18.0" <2>
     }
   }
 }
@@ -69,7 +69,8 @@ provider "google" {
 }
 
 ----
-<1> Sustituye este valor por el nombre de tu proyecto (__cnsa2022-abc123__)
+<1> Sustituye este valor por el nombre de tu proyecto, indicando el año correcto y concatenando tu nombre de usuario de la UAL (__cnsa2024-abc123__)
+<2> Versión del proveedor de Google Cloud que se va a utilizar. Utiliza la última disponible, que puedes consultar en https://registry.terraform.io/providers/hashicorp/google/latest[aquí].
 
 == Creación de la clave para la Cuenta de servicio
 
@@ -179,6 +180,19 @@ Tras la ejecución, comprueba que las instancias se han creado correctamente en 
 
 Cuando desees eliminar todos los recursos que hemos creado con esta plantilla, simplemente ejecuta `terraform destroy`. Por ahora debes simplemente apagar las instancias cuando no las uses, porque las necesitaremos en el resto de la asignatura.
 
+=== Más comandos útiles
+
+`terraform state list`: Muestra todos los recursos que gestiona terraform.
+
+`terraform state show <recurso>`: Muestra los detalles de un recurso concreto.
+
+`terraform show`: Muestra los detalles de todos los recursos.
+
+Si necesitas destruir y volver a crear un recurso concreto, y no todo el plan: 
+
+`terraform plan -destroy -target=<recurso>`: Muestra el plan de destrucción de un recurso concreto.
+
+terraform destroy -target=<recurso> --auto-approve: Destruye un recurso concreto.
 
 == Cloud DNS
 

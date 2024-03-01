@@ -9,10 +9,15 @@ Existen distintas opciones respecto al entorno en el que realizar las actividade
 
 - Windows: es recomendable usar un terminal basado en Linux, por ejemplo *Git Bash* (https://git-scm.com).
 - Linux y Mac: el *terminal del S.O* incluye todas las herramientas básicas necesarias (_git_, _ssh_, _etc_).
-- *Cloud Shell de Google Cloud*: la consola web de Google Cloud proporciona la herramienta *Cloud Shell* que permite trabajar cómodamente contra GCP desde cualquier navegador web y cualquier S.O. Recuerda que Cloud Shell tiene una cuota de uso, con un límite de número de horas semanales: 
+- *Cloud Shell de Google Cloud*: la consola web de Google Cloud proporciona la herramienta *Cloud Shell* que permite trabajar cómodamente contra GCP desde cualquier navegador web y cualquier S.O. Recuerda que Cloud Shell tiene una cuota de uso, con un límite de número de horas semanales (168h): 
 
 .Cuota de Cloud Shell
 image::cloud-shell-cuota.png[role="thumb", align="center"]
+
+[NOTE]
+====
+Para ver tu cuota semanal, haz clic en image:session-info-icon.png[] *Información de la sesión* y, luego, en *Cuota de uso*. Aparecerá un cuadro de diálogo en el que se mostrarán las horas restantes en tu cuota, la cantidad total de horas en ella y la fecha y hora en que se restablecerá la cuota.
+====
 
 A continuación se explican las herramientas que debes configurar si estás usando tu máquina local, aunque probablemente algunas ya las tendrás instaladas. Si optas por trabajar en Cloud Shell, seguramente también estarán ya instaladas.
 
@@ -75,7 +80,7 @@ Además, se debe disponer de crédito en GCP, proporcionado por el profesor, y d
 
 Si ya dispones de crédito en GCP, podrás usarlo ahora. En cualquier caso, para esta asignatura disponemos de un nuevo cupón educativo de 50$ por estudiante, que no necesita tarjeta de crédito para su activación. Actívalo en la dirección que encontrarás en el https://aulavirtual.ual.es/[Aula Virtual] de la asignatura, en la sección *Area de Contenido* > *Cupones de GCP*, usando tu email __@inlumine.ual.es__.
 
-Accede a la https://console.cloud.google.com/[Consola de Google Cloud] y *crea un nuevo proyecto* GCP con el nombre *cnsa2022-__abc123__* (sustituyendo __abc123__ por tu nombre de usuario), y dale permisos al profesor. Para ello, revisa las instrucciones que vimos en la asignatura del primer cuatrimestre. El crédito del cada cupón dura 12 meses, así que este nuevo proyecto asígnalo a la cuenta de facturación de la asignatura del primer cuatrimestre, ya que es mejor consumir ese crédito porque caduca antes. Si se consume el crédito del primer cupón, simplemente tendrás que cambiar tu proyecto *cnsa2022-__abc123__* a la nueva cuenta de facturación del nuevo cupón.
+Accede a la https://console.cloud.google.com/[Consola de Google Cloud] y *crea un nuevo proyecto* GCP con el nombre *cnsa2024-__abc123__* (indicando el año correcto y sustituyendo __abc123__ por tu nombre de usuario), y dale permisos al profesor. Para ello, revisa las instrucciones que vimos en la asignatura del primer cuatrimestre. El crédito del cada cupón dura 12 meses, así que este nuevo proyecto asígnalo a la cuenta de facturación de la asignatura del primer cuatrimestre, ya que es mejor consumir ese crédito porque caduca antes. Si se consume el crédito del primer cupón, simplemente tendrás que cambiar tu proyecto *cnsa2024-__abc123__* a la nueva cuenta de facturación del nuevo cupón.
 
 == Terraform
 
@@ -88,7 +93,7 @@ En Windows se recomienda instalarlo con https://chocolatey.org/docs/installation
 choco install terraform -y
 ----
 
-Cierra el terminal o la ventana de comandos, abre una nueva con permisos normales y comprueba que se ha instalado correctamente:author: 
+Cierra el terminal o la ventana de comandos, abre una nueva con permisos normales y comprueba que se ha instalado correctamente:
 
 [source,bash]
 ----
@@ -104,7 +109,7 @@ Terraform v1.1.6
 on windows_amd64
 ----
 
-== GCloud CLI para  GCP
+== GCloud CLI para GCP
 
 Google Cloud Command Line Interface está disponible para su instalación https://cloud.google.com/sdk/install[aquí].
 
