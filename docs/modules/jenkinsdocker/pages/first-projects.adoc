@@ -127,7 +127,7 @@ pipeline {
 }
 ----
 <1> Elige entre las https://hub.docker.com/_/maven[imágenes de Maven] disponibles. En este caso, se ha elegido la versión 3.9 con Java 21, que es distinta a la que hemos instalado en el nodo principal.
-<2> Mapea el volumen del host `$HOME/.m2`donde se almacenan las dependencias de Maven, para que estén disponibles en el contenedor, eliminando así la necesidad de volver a descargarlas en sucesivas ejecuciones.
+<2> Mapea el volumen del host `$HOME/.m2` donde se almacenan las dependencias de Maven, para que estén disponibles en el contenedor, eliminando así la necesidad de volver a descargarlas en sucesivas ejecuciones.
 
 Te dará error al construir el proyecto. 
 [source,bash,subs="verbatim,quotes"]
