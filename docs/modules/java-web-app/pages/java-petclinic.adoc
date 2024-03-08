@@ -4,7 +4,7 @@
 
 Una vez que hemos configurado correctamente nuestro entorno de CI/CD con Jenkins, vamos a estudiar varios ejemplos tanto en Java como en NodeJs. Para comprender los ejemplos, primero los vamos a construir y ejecutar en local, para después  automatizar el proceso de construcción y despliegue con Jenkins.
 
-En este primer ejemplo en Java, nos vamos a basar en el proyecto PetClinic con Spring Boot, disponible en https://github.com/spring-projects/spring-petclinic[GitHub]. Petclinic es una aplicación https://spring.io/projects/spring-boot[Spring Boot] construida usando https://spring.io/guides/gs/maven/[Maven] como herramienta de soporte a la gestión y construcción (_build_). 
+En este primer ejemplo en Java, nos vamos a basar en el proyecto PetClinic con Spring Boot. https://github.com/spring-projects/spring-petclinic[Petclinic] es una aplicación https://spring.io/projects/spring-boot[Spring Boot] construida usando https://spring.io/guides/gs/maven/[Maven] como herramienta de soporte a la gestión y construcción (_build_). 
 
 https://spring.io/projects/spring-boot[Spring Boot] es un framework de código abierto para el desarrollo de aplicaciones Java basadas en https://spring.io/[Spring]. Spring Boot genera una proyecto Maven/Gradle con todo lo necesario y que se autoconfigura en el arranque. Por ejemplo, si decimos que queremos una aplicación web, Spring Boot automáticamente embebe un Tomcat y lo configura con el servlet de Spring. Toda la configuración la añade al archivo de la herramienta de __build__ que indiquemos, en caso de Maven, al archivo *`pom.xml`*.
 
@@ -13,7 +13,9 @@ Recordemos que *Maven* es una herramienta software para la gestión y construcci
 Para el proyecto PetClinic, en tu máquina de desarrollo local puedes construir el `.jar` (empaquetado) y ejecutarlo:
 [IMPORTANT]
 ====
-Requiere JDK 11 o superior en la máquina local. Si estás en Windows y tienes varias instalaciones, https://www.happycoders.eu/java/how-to-switch-multiple-java-versions-windows/[cambia la version de Java] predeterminada a la 11. 
+Requiere JDK 11 o superior en la máquina local. Si estás en Windows y tienes varias instalaciones, https://www.happycoders.eu/java/how-to-switch-multiple-java-versions-windows/[establece la version de Java] predeterminada.
+
+
 ====
 
 [source,bash]
@@ -46,29 +48,21 @@ Recuerda que para ejecutarla en este modo, debes tener un MySql funcionando en l
 docker-compose up -d 
 ----
 
-El archivo `docker-compose.yml` que permite iniciar MySql puedes consultarlo en la carpeta raíz del proyecto, y es el siguiente:
+El archivo `docker-compose.yml` que permite iniciar MySql y Postgres puedes consultarlo en la carpeta raíz del proyecto.
 
-[source,yml,subs="verbatim,quotes"]
-----
-mysql:
-  image: mysql:5.7
-  ports:
-    - "3306:3306"
-  environment:
-    - MYSQL_ROOT_PASSWORD=
-    - MYSQL_ALLOW_EMPTY_PASSWORD=true
-    - MYSQL_USER=petclinic
-    - MYSQL_PASSWORD=petclinic
-    - MYSQL_DATABASE=petclinic
-  volumes:
-    - "./conf.d:/etc/mysql/conf.d:ro"
-----
+[NOTE]
+====
+Si abres el repositorio de PetClinic con VS Code, verás que el IDE te sugiere abrir el proyecto en un entorno https://code.visualstudio.com/docs/devcontainers/containers[_Dev Containers_]. Esto *no es necesario*. 
+
+Pero si aceptas, se descargará una imagen de Docker con un entorno de desarrollo preconfigurado para trabajar con el proyecto, así como las imágenes de MySql y Postgres. En ese caso, al lanzar la construcción del proyecto, los tests de integración se ejecutan sobre las bases de datos MySql y Postgres.
+====
+
 
 == Creación del Pipeline para PetClinic
 
 Una vez que hemos probado la ejecución y funcionamiento de la aplicación PetClinic en local, vamos a configurar el proyecto en el servidor Jenkins de CI/CD para que este se encargue de la construcción y el despliegue automatizados.
 
-Conecta a tu Jenkins, y crea un nuevo item de tipo Pipeline. Dale el nombre 'spring-petclinic-pipeline':
+Conecta a tu Jenkins, y crea un nuevo item de tipo Pipeline. Dale el nombre `spring-petclinic-pipeline`:
 
 .New Item, PetClinic pipeline
 image::new-item-pipeline-petclinic.png[role="thumb", align="center"]
@@ -110,11 +104,11 @@ pipeline {
 }
 ----
 
-<1> agente o nodo de Jenkins en que ejecuta la construcción del proyecto. En el ejemplo, `any` indica que se ejecutará cualquier nodo, en nuestro caso será en __master__ ya que es el único nodo que hay definido en nuestro Jenkins.
+<1> agente o nodo de Jenkins en que ejecuta la construcción del proyecto. En el ejemplo, `any` indica que se ejecutará cualquier nodo, en nuestro caso será en el nodo _principal (_master_) ya que es el único que hay definido.
 <2> como herramienta para la construcción se usará maven. Pon aquí el nombre que diste a tu instalación de Maven configurada previamente en Tools Configuration. 
 <3> Bloque de `stages`: fases o etapas que conforman el pipeline
 <4> Fase de descarga del repositorio git
-<5> Fase de compilación, ejecución de test y empaquetado de la aplicación. Se realizarán con los __goals__ `clean package`: primero se elimina todo lo generado en la construcción anterior, y a continuación se lanza la construcción con `package` tal y como está definida en el archivo `pom.xml`. La opcion `-Dcheckstyle.skip` anula el análisis de CheckStyle, que lo añadiremos en una fase posterior.
+<5> Fase de compilación, ejecución de test y empaquetado de la aplicación. Se realizarán con los __goals__ `clean package`: primero `clean` elimina todo lo generado en la construcción anterior que se encuentra en la carpeta `target`, y a continuación se lanza la construcción con `package` tal y como está definida en el archivo `pom.xml`. La opcion `-Dcheckstyle.skip` anula el análisis de CheckStyle, que lo añadiremos en una fase posterior.
 <6> Paso posterior que guarda los resultados de los test de JUnit para generar la gráfica de evolución de los test.
 
 Tras ejecutar el pipeline, con "Build now", el resultado debe ser el siguiente:
