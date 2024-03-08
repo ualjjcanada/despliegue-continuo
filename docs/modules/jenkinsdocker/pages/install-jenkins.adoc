@@ -161,14 +161,14 @@ image::jenkins-welcome.png[role="thumb", align="center"]
 
 == Instalación de plugins adicionales
 
-Vamos a instalar varios plugins: NodeJs, GitHub integration, Docker Pipeline, Warnings Next Generation, Jacoco, Code Coverage API, https://plugins.jenkins.io/google-container-registry-auth[Google Container Registry Auth]. 
+Vamos a instalar varios plugins: NodeJs, GitHub integration, Docker Pipeline, Warnings (Next Generation), JaCoCo, Coverage, https://plugins.jenkins.io/google-container-registry-auth[Google Container Registry Auth]. 
 
-Haz clic en __Manage Jenkins__ > __Manage Plugins__. En la pestaña __Available__ busca __Github integration__, seleccionaló y pulsa en __Download now and install after restart__.
+Haz clic en __Manage Jenkins__ > __Manage Plugins__. En la pestaña __Available__ busca __Github integration__, seleccionalo y pulsa en __Download now and install after restart__.
 
 .Instalación del plugin Github integration
 image::jenkins-plugins-github-integration.png[role="thumb", align="center"]
 
-Repite los pasos para los plugins __Green Balls__, __NodeJS__ y __Docker Pipeline__.
+Repite los pasos para los plugins el resto de plugins.
 
 .Instalación del plugin NodeJS
 image::jenkins-plugins-nodejs.png[role="thumb", align="center"]
@@ -178,18 +178,18 @@ Marca __Restart Jenkins__ para completar la instalación. Tras unos segundos, vu
 .Reiniciar para completar la instalación
 image::jenkins-plugins-restart.png[role="thumb", align="center"]
 
-== Configuración las tools en Jenkins
+== Configuración las Tools en Jenkins
 
 Tras la instalación del plugin https://plugins.jenkins.io/nodejs/[__NodeJS__], es necesario realizar la siguiente configuración: 
 
 . Ve a __Manage Jenkins__, __Global Tool configuration__.
-. En *NodeJS*, añade un instalador (se recomienda la última versión disponible). Dale por nombre "nodejs" y marca instalar automáticamente. 
-. Guarda los cambios.
+. En *NodeJS*, añade un instalador (se recomienda la última versión _lts_ disponible). Dale por nombre "nodejs lts" y marca instalar automáticamente. 
+. Guarda los cambios con _Save_.
 
 .Configuración de herramienta NodeJS
-image::jenkins-tool-nodejs.png[role="thumb", align="center"]
+image::jenkins-tool-nodejs-lts.png[role="thumb", align="center"]
 
-De la misma forma, instala la última versión de Maven.
+De la misma forma, instala la última versión de Maven. En este caso dale el nombre _Default Maven_ y marca instalar automáticamente.
 
 .Configuración de herramienta Maven
-image::jenkins-tool-maven.png[role="thumb", align="center"]
+image::jenkins-tool-maven-39.png[role="thumb", align="center"]
