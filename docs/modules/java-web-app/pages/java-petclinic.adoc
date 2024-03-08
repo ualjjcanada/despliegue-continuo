@@ -4,16 +4,16 @@
 
 Una vez que hemos configurado correctamente nuestro entorno de CI/CD con Jenkins, vamos a estudiar varios ejemplos tanto en Java como en NodeJs. Para comprender los ejemplos, primero los vamos a construir y ejecutar en local, para después  automatizar el proceso de construcción y despliegue con Jenkins.
 
-En este primer ejemplo en Java, nos vamos a basar en el proyecto PetClinic con Spring Boot, disponible en https://github.com/spring-projects/spring-petclinic[GitHub]. Petclinic es una aplicación https://spring.io/guides/gs/spring-boot[Spring Boot] construida usando https://spring.io/guides/gs/maven/[Maven] como herramienta de soporte a la gestión y construcción (_build_). 
+En este primer ejemplo en Java, nos vamos a basar en el proyecto PetClinic con Spring Boot, disponible en https://github.com/spring-projects/spring-petclinic[GitHub]. Petclinic es una aplicación https://spring.io/projects/spring-boot[Spring Boot] construida usando https://spring.io/guides/gs/maven/[Maven] como herramienta de soporte a la gestión y construcción (_build_). 
 
-https://es.wikipedia.org/wiki/Spring_Framework[Spring Boot] es un framework de código abierto para el desarrollo de aplicaciones Java basadas en https://spring.io/[Spring]. Spring Boot genera una proyecto Maven/Gradle con todo lo necesario y que se autoconfigura en el arranque. Por ejemplo, si decimos que queremos una aplicación web, Spring Boot automáticamente embebe un Tomcat y lo configura con el servlet de Spring. Toda la configuración la añade al archivo de la herramienta de __build__ que indiquemos, en caso de Maven, al archivo *`pom.xml`*.
+https://spring.io/projects/spring-boot[Spring Boot] es un framework de código abierto para el desarrollo de aplicaciones Java basadas en https://spring.io/[Spring]. Spring Boot genera una proyecto Maven/Gradle con todo lo necesario y que se autoconfigura en el arranque. Por ejemplo, si decimos que queremos una aplicación web, Spring Boot automáticamente embebe un Tomcat y lo configura con el servlet de Spring. Toda la configuración la añade al archivo de la herramienta de __build__ que indiquemos, en caso de Maven, al archivo *`pom.xml`*.
 
 Recordemos que *Maven* es una herramienta software para la gestión y construcción de proyectos Java. https://maven.apache.org/[Apache Maven] estandariza la configuración de un proyecto en todo su ciclo de vida, como son todas las fases de compilación, ejecución de pruebas, empaquetado, etc. Maven permite la gestión de dependencias entre módulos y distintas versiones de librerías, simplemente indicando los módulos que componen el proyecto, y las dependencias utiliza el software que estamos desarrollando, en un fichero XML de configuración llamado POM (Project Object Model).
 
 Para el proyecto PetClinic, en tu máquina de desarrollo local puedes construir el `.jar` (empaquetado) y ejecutarlo:
 [IMPORTANT]
 ====
-Requiere JDK 11 en la máquina local. Si estás en Windows y tienes varias instalaciones, https://www.happycoders.eu/java/how-to-switch-multiple-java-versions-windows/[cambia la version de Java] predeterminada a la 11. 
+Requiere JDK 11 o superior en la máquina local. Si estás en Windows y tienes varias instalaciones, https://www.happycoders.eu/java/how-to-switch-multiple-java-versions-windows/[cambia la version de Java] predeterminada a la 11. 
 ====
 
 [source,bash]
