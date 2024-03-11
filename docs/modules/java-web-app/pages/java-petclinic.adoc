@@ -55,7 +55,7 @@ El archivo `docker-compose.yml` que permite iniciar MySql y Postgres puedes cons
 Si abres el repositorio de PetClinic con VS Code, verás que el IDE te sugiere abrir el proyecto en un entorno https://code.visualstudio.com/docs/devcontainers/containers[_Dev Containers_]. Esto *no es necesario*, puedes cerrar el aviso.
 
 .Aviso Dev Containers en Visual Studio Code
-image::vscode-devcontainers-banner.png[role="thumb", align="center"]
+image::vscode-devcontainer-banner.png[role="thumb", align="center"]
 
 Pero si aceptas, se descargará una imagen de Docker con un entorno de desarrollo preconfigurado para trabajar con el proyecto, así como las imágenes de MySql y Postgres. En ese caso, al lanzar la construcción del proyecto, los tests de integración se ejecutan sobre las bases de datos MySql y Postgres.
 ====
