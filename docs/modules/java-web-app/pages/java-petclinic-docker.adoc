@@ -13,7 +13,7 @@ Para trabajar con contenedores Docker en tu equipo local, debes tener Docker ins
 
 [IMPORTANT]
 ====
-Hasta ahora nos estamos basando en el proyecto _PetClinic_ original (genericamente llamado _upstream_) disponible en https://github.com/spring-projects/spring-petclinic[GitHub]. En esta sección necesitarás poder hacer cambios sobre el mismo, básicamente vamos a añadir al proyecto un archivo `Dockerfile` y un archivo `Jenkinsfile`, así que crea un _fork_ y trabaja con tu _fork_ a partir de ahora. Verás que en los bloques de código de este documento indica como URL del respositorio `https://github.com/ualcnsa/spring-petclinic.git`, que deberás cambiar por la URL de tu repositorio forkeado.
+Hasta ahora nos estamos basando en el proyecto _PetClinic_ original (genéricamente llamado _upstream_) disponible en https://github.com/spring-projects/spring-petclinic[GitHub]. En esta sección necesitarás poder hacer cambios sobre el mismo, básicamente vamos a añadir al proyecto un archivo `Dockerfile` y un archivo `Jenkinsfile`, así que crea un _fork_ y trabaja con tu _fork_ a partir de ahora. Verás que en los bloques de código de este documento indica como URL del repositorio `https://github.com/ualcnsa/spring-petclinic.git`, que deberás cambiar por la URL de tu repositorio forkeado.
 ====
 
 == Creación del `Dockerfile` multi-stage
@@ -21,7 +21,7 @@ Hasta ahora nos estamos basando en el proyecto _PetClinic_ original (genericamen
 Para construir aplicaciones Maven con Docker y luego https://spring.io/guides/gs/spring-boot-docker/[crear el contendedor de Docker] que empaquete la aplicación, la opción recomendada es usar https://docs.docker.com/get-started/09_image_best/#multi-stage-builds[*Multi-Stage Builds*] en tu Dockerfile, de manera que:
 
 * Una primera fase o _stage_ construye el `.jar` a partir de una imagen de Maven, como por ejemplo `maven:3.8.4-openjdk-11-slim`
-* Y luego en una seguna fase, ese `.jar` lo copia en el contenedor basado en la imagen OpenJDK-11, que es el entorno de ejecución Java necesario.
+* Y luego en una segunda fase, ese `.jar` lo copia en el contenedor basado en la imagen OpenJDK-11, que es el entorno de ejecución Java necesario.
 
 La documentación de PetClinic indica cómo construir el contenedor usando https://github.com/spring-projects/spring-petclinic#building-a-container[Spring Boot build plugin]. A nosotros nos interesa ver cómo hacerlo de forma genérica para cualquier aplicación Java basada en Maven. Vamos a definir el siguiente archivo `Dockerfile` que debe estar en la carpeta raíz del proyecto PetClinic:
 
@@ -50,7 +50,7 @@ COPY ${JAR_FILE} app.jar
 # Run the jar file
 ENTRYPOINT ["java","-jar","/app.jar"]
 ----
-<1> Primera fase o _stage_ de _build_, construye la aplición llamando a los goals `clean package` de Maven. Contiene los pasos básicos para construir una aplicación Java basada en Maven. Dicha construcción la divide en dos partes, primero copia el `pom.xml` y descarga las dependencias con `dependency:go-offline`, y luego copia todos los fuentes y construye el proyecto con `package`. De esta forma se optimiza la reconstrucción del contenedor ya que la descarga de dependencias es una etapa que dura varios minutos. 
+<1> Primera fase o _stage_ de _build_, construye la aplicación llamando a los goals `clean package` de Maven. Contiene los pasos básicos para construir una aplicación Java basada en Maven. Dicha construcción la divide en dos partes, primero copia el `pom.xml` y descarga las dependencias con `dependency:go-offline`, y luego copia todos los fuentes y construye el proyecto con `package`. De esta forma se optimiza la reconstrucción del contenedor ya que la descarga de dependencias es una etapa que dura varios minutos. 
 
 <2> Segunda fase, crea una imagen con el entorno de ejecución de Java 11 y el empaquetado `.jar` de la aplicación PetClinic. Contiene los pasos básicos para ejecutar una aplicación String Boot en un contenedor: partiendo de una imagen de `openjdk`, copia el archivo `target/*.jar` en el contenedor con el nombre `app.jar` y lo ejecuta mediante el comando `ENTRYPOINT` para que no haya ninguna shell sobre el proceso `java`. 
 
@@ -104,7 +104,7 @@ https://cloud.google.com/container-registry/docs/advanced-authentication[Authent
 * Seleccionar `Crear cuenta de servicio`.
 * Darle un nombre (p.e. `container-registry`)
 * Seleccionar "Crear y continuar".
-* En el paso `Conceder a esta cuenta de servicio acceso al proyecto` del asistente, seleccionar el rol `Cloud Storage -> Admisnitrador de almacenamiento`. Continuar y Listo.
+* En el paso `Conceder a esta cuenta de servicio acceso al proyecto` del asistente, seleccionar el rol `Cloud Storage -> Administrador de almacenamiento`. Continuar y Listo.
 * Editar la Cuenta de servicio. En la sección `Claves` seleccionar `Agregar clave | Crear nueva clave`.
 * Dejar `JSON` en el tipo de clave.
 * Seleccionar `Crear`. A continuación se descargará la clave privada.
@@ -158,7 +158,7 @@ docker build -t gcr.io/$GOOGLE_CLOUD_PROJECT/petclinic:1.0 .
 
  
 [start=2]
-. A continuación vamos a publicar con `docker push`: habilita la API de Container Registry en tu proyecto GCP, accediendo en el menú a Contaner Registry > Images:
+. A continuación vamos a publicar con `docker push`: habilita la API de Container Registry en tu proyecto GCP, accediendo en el menú a Container Registry > Images:
 
 .Habilitar la API Container Registry
 image::container-registry-habilitar-api.png[role="thumb", align="center"]
@@ -226,7 +226,7 @@ Para solucionarlo, bien detén el proceso java que está corriendo con la aplica
 docker run -p 80:8080 -t --name petclinic gcr.io/$GOOGLE_CLOUD_PROJECT/petclinic:1.0
 ----
 
-Pero ten en cuenta que si el contenedor ya se ha creado y no ha podido iniciarse porque el puerto 8080 estaba ocupado, si intentas volver a crearlo con `docker run` te dirá que el contenedor ya existe. Revisa si está ya creado y en ese caso inicialó. 
+Pero ten en cuenta que si el contenedor ya se ha creado y no ha podido iniciarse porque el puerto 8080 estaba ocupado, si intentas volver a crearlo con `docker run` te dirá que el contenedor ya existe. Revisa si está ya creado y en ese caso inícialo. 
 
 [source, bash]
 ----
@@ -320,7 +320,7 @@ Para probar que la imagen del contenedor se ha creado bien, añade esta fase que
 <1> Por si ya se ha ejecutado el pipeline anteriormente, y no se ha eliminado el contenedor de la ejecución anterior, es necesario comprobar si el contenedor `petclinic` ya se está ejecutando y, en tal caso, pararlo con `docker stop` y eliminarlo con `docker rm`
 <2> Con `docker run` ejecuta el contenedor `petclinic` a partir de la imagen recién construida. Para que  el pipeline pueda finalizar y el contenedor siga ejecutándose, se añade `-d` que indica modo _detached_ que ejecuta el contenedor en background.
 
-La aplicación debe estar accesible en el puerto `8080` en tu máquina de Jenkins. Para asegurarnos que la aplicación se está ejecutando bien, debemos problarlo "manualmente". Para automatizar esta prueba, lo adecuado sería realizar unos tests end-to-end, con https://www.selenium.dev[Selenium]. Esto se explicará en otra actividad, dedicada al testing.
+La aplicación debe estar accesible en el puerto `8080` en tu máquina de Jenkins. Para asegurarnos que la aplicación se está ejecutando bien, debemos probarlo "manualmente". Para automatizar esta prueba, lo adecuado sería realizar unos tests end-to-end, con https://www.selenium.dev[Selenium]. Esto se explicará en otra actividad, dedicada al testing.
 
 [source,groovy]
 ----
@@ -424,10 +424,10 @@ docker rm $(docker ps -a -q)
 # Remove all images
 docker rmi $(docker images -q)
 ```
-Usalos si te aparece algun mensaje de error del tipo `no space left on device`, ya que la máquina Jenkins están construyendo muchas imágenes y se queda sin espacio de disco.
+Úsalos si te aparece algún mensaje de error del tipo `no space left on device`, ya que la máquina Jenkins están construyendo muchas imágenes y se queda sin espacio de disco.
 ====
   
-La aplicación PetClinic debe estar accesible _en producción_, en el puerto 8080 en la instancia de despliegue. Para asegurarnos, debemos problarlo "manualmente". Para automatizar esta prueba _en producción_, lo adecuado de nuevo sería realizar unos tests end-to-end, con https://www.selenium.dev[Selenium]. Esto se explicará en otra actividad, dedicada al testing.
+La aplicación PetClinic debe estar accesible _en producción_, en el puerto 8080 en la instancia de despliegue. Para asegurarnos, debemos probarlo "manualmente". Para automatizar esta prueba _en producción_, lo adecuado de nuevo sería realizar unos tests end-to-end, con https://www.selenium.dev[Selenium]. Esto se explicará en otra actividad, dedicada al testing.
 
 [source,groovy]
 ----
