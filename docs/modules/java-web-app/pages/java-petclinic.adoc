@@ -89,7 +89,7 @@ pipeline {
     stage('Compile, Test, Package') { <5>
       steps {
         // Run goal 'package' includes compile, test and package.
-        sh "mvn clean package -Dcheckstyle.skip"
+        sh "mvn clean package -Dcheckstyle.skip -Dtest=!PostgresIntegrationTests*" <7>
       }
       post { <6>
         // If Maven was able to run the tests, even if some of the test
@@ -108,13 +108,14 @@ pipeline {
 <2> como herramienta para la construcción se usará maven. Pon aquí el nombre que diste a tu instalación de Maven configurada previamente en Tools Configuration. 
 <3> Bloque de `stages`: fases o etapas que conforman el pipeline
 <4> Fase de descarga del repositorio git
-<5> Fase de compilación, ejecución de test y empaquetado de la aplicación. Se realizarán con los __goals__ `clean package`: primero `clean` elimina todo lo generado en la construcción anterior que se encuentra en la carpeta `target`, y a continuación se lanza la construcción con `package` tal y como está definida en el archivo `pom.xml`. La opcion `-Dcheckstyle.skip` anula el análisis de CheckStyle, que lo añadiremos en una fase posterior.
+<5> Fase de compilación, ejecución de test y empaquetado de la aplicación. Se realizarán con los __goals__ `clean package`: primero `clean` elimina todo lo generado en la construcción anterior que se encuentra en la carpeta `target`, y a continuación se lanza la construcción con `package` tal y como está definida en el archivo `pom.xml`. La opción `-Dcheckstyle.skip` anula el análisis de CheckStyle, que lo añadiremos en una fase posterior.
 <6> Paso posterior que guarda los resultados de los test de JUnit para generar la gráfica de evolución de los test.
+<7> La opción `-Dtest=!PostgresIntegrationTests*` excluye la ejecución de los tests de integración con Postgres, ya que estos fallan en Jenkins porque hay algún problema con el contenedor de Postgres que se inicia en la construcción del proyecto.
 
 Tras ejecutar el pipeline, con "Build now", el resultado debe ser el siguiente:
 
 .Construcción del pipeline PetClinic
-image::petclinic-pipeline-build-1.png[role="thumb", align="center"]
+image::petclinic-pipeline-build-1-2024.png[role="thumb", align="center"]
 
 Si realizamos una segunda ejecución, ya aparecerá la gráfica de evolución de los tests de JUnit. 
 
@@ -126,13 +127,13 @@ Jenkins nos permite publicar métricas asociadas al proyecto. Una de ellas, es l
 La *Cobertura* de código nos indica el porcentaje de código de producción que está siendo ejecutado por los test. Es deseable tener un valor de cobertura lo más próximo posible al 100%
 ****
 
-El proyecto PetClinic contiene 40 test unitarios en JUnit, y está configurado (ver `pom.xml`) para que se calcule la cobertura cuando se lanzan los tests mediante el plugin JaCoCo (Java Code Coverage). Puedes visualizar el resultado de la cobertura en tu construcción local, en la carpeta `target/site/jacoco`: 
+El proyecto PetClinic contiene mas de 40 tests unitarios en JUnit, y está configurado (ver `pom.xml`) para que se calcule la cobertura cuando se lanzan los tests mediante el plugin JaCoCo (Java Code Coverage). Puedes visualizar el resultado de la cobertura en tu construcción local, en la carpeta `target/site/jacoco`: 
 
-.Archivos generados por Jacoco
+.Archivos generados por JaCoCo
 image::jacoco-local-results.png[role="thumb", align="center"]
 
-.Informe html de la cobertura Jacoco
-image::jacoco-local-html.png[role="thumb", align="center"]
+.Informe html de la cobertura JaCoCo
+image::jacoco-local-html-2024.png[role="thumb", align="center"]
 
 Y si haces clic en el nombre de una clase, verás el código coloreado: 
 
@@ -145,17 +146,15 @@ image::plugins-jacoco-class-details.png[role="thumb", align="center"]
 
 Para visualizar el resultado de la cobertura en Jenkins: 
 
-. Instala el plugin de Jacoco y el plugin Code Coverage API
+. Instala el plugin de JaCoCo y el plugin Coverage (si no lo habías hecho antes):
 
 .Instalación del plugin Jacoco
-image::plugins-jacoco-install.png[role="thumb", align="center"]
+image::plugins-jacoco-install-2024.png[role="thumb", align="center"]
 
-.Instalación del plugin Code Coverage API
-image::plugins-code-coverage-api-install.png[role="thumb", align="center"]
 
 [start=2]
 
-. Añade las dos siguientes lineas al bloque `post` para que se guarde y muestre el informe de cobertura.
+. Añade las siguientes lineas al bloque `post` para que se guarde y muestre el informe de cobertura.
 
 [source,groovy]
 ----
@@ -164,23 +163,28 @@ image::plugins-code-coverage-api-install.png[role="thumb", align="center"]
     junit '**/target/surefire-reports/TEST-*.xml'
     archiveArtifacts 'target/*.jar'
     jacoco(execPattern: 'target/jacoco.exec') <1>
-    publishCoverage adapters: [jacocoAdapter('target/site/jacoco/jacoco.xml')] <2>
+    recordCoverage(tools: [[parser: 'JACOCO']], <2>
+            id: 'jacoco', name: 'JaCoCo Coverage',
+            sourceCodeRetention: 'EVERY_BUILD',
+            qualityGates: [
+                [threshold: 60.0, metric: 'LINE', baseline: 'PROJECT', unstable: true],
+                [threshold: 60.0, metric: 'BRANCH', baseline: 'PROJECT', unstable: true]])
   }
   ...
 ----
 
 <1> Añade el informe Coverage Trend
-<2> Añade el informe Coverage Report
+<2> Añade el informe Coverage
 
 Tras la construcción de nuevo del proyecto, verás la gráfica de los resultados de los test y debajo la gráfica de evolución de cobertura: 
 
 .Informe de cobertura en el dashboard
-image::plugins-jacoco-dashboard-result.png[role="thumb", align="center"]
+image::plugins-jacoco-dashboard-result-2024.png[role="thumb", align="center"]
 
 Haciendo clic sobre la gráfica accedes a los detalles: 
 
 .Detalle de de cobertura
-image::plugins-jacoco-details-result.png[role="thumb", align="center"]
+image::plugins-jacoco-details-result-2024.png[role="thumb", align="center"]
 
 
 == Análisis estático de código: __Checkstyle__
@@ -195,11 +199,12 @@ El proyecto PetClinic tiene configurado el plugin de CheckStyle en el `pom.xml`:
 
 [source,xml]
 ----
+    <maven-checkstyle.version>3.3.1</maven-checkstyle.version>
     ...
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.1.0</version>
+        <version>${maven-checkstyle.version}</version>
         ...
       </plugin>
     ...
@@ -210,7 +215,7 @@ Para ejectutar CheckStyle en local, ejecuta el comando de maven (`mvn`) con los 
 Tras la ejecución, en la carpeta `target/site/` verás el archivo `checkstyle.html`:
 
 .Informe de CheckStyle
-image::checkstyle-report-html.png[role="thumb", align="center"]
+image::checkstyle-report-html-2024.png[role="thumb", align="center"]
 
 Sería labor del equipo de desarrollo revisar los errores detectados y tratar de corregirlos, siempre que realmente supongan una mejora para la calidad del código. 
 
@@ -222,22 +227,22 @@ Para ejecutar y visualizar el informe en Jenkins:
 
 [source,groovy]
 ----
-  stage ('Analysis') {
-    steps {
-      // Warnings next generation plugin required
-      sh "mvn checkstyle:checkstyle site -DgenerateReports=false"
-      recordIssues enabledForFailure: true, tool: checkStyle() 
+    stage ('Analysis') {
+      steps {
+        // Warnings next generation plugin required
+        sh "mvn checkstyle:checkstyle site -DgenerateReports=false"
+        recordIssues enabledForFailure: true, tool: checkStyle()
+      }
     }
-  }
 ----
 
 Tras la construcción, el pipeline tiene una nueva fase y además en el menú tenemos acceso al informe de CheckStyle.
 
 .Pipeline con la nueva fase de Análisis
-image::checkstyle-report-dashboard.png[role="thumb", align="center"]
+image::checkstyle-report-dashboard-2024.png[role="thumb", align="center"]
 
 .Detalles del informe de CheckStyle
-image::checkstyle-report-details.png[role="thumb", align="center"]
+image::checkstyle-report-details-2024.png[role="thumb", align="center"]
 
 .Saber más...
 ****
@@ -283,6 +288,11 @@ Copia este nueva fase en tu pipeline, sustituyendo DEPLOY_MACHINE por la IP o el
 <2> Copia con `scp` el archivo `.jar`, que se ha generado tras la construcción con maven, en la máquina de despligue
 <3> Detiene el proceso `java` si existe de un despliegue anterior.
 <4> Ejecuta la aplicación java empaquetada en el `.jar`, en background y con `nohup`, que hace que el proceso siga funcionando incluso si el usuario que lo inició cierra la sesión. De esta manera finaliza el comando ssh y el proceso sigue funcionando, es decir, la aplicación PetClinic estará desplegada y funcionando. 
+
+Tras ello abre la máquina de despliegue en el puerto 8080, y verás la aplicación PetClinic funcionando.
+
+.Homepage PetClinic
+image::petclinic-deployed.png[role="thumb", align="center"]
 
 ****
 Referencias:
