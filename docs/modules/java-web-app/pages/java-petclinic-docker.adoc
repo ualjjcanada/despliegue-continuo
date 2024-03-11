@@ -2,6 +2,8 @@
 
 Para realizar el despliegue de PetClinic como contenedor, primero tenemos que https://www.callicoder.com/spring-boot-docker-example/[dockerizar] la aplicación, luego publicar la imagen de contenedor en un registro como DockerHub o Google Container Registry, y por último ejecutar el contenedor en la instancia de despliegue.
 
+El contenedor para el despliegue de PetClinic se construirá a partir de un `Dockerfile` que definirá cómo se construye la imagen del contenedor, y cómo se ejecuta la aplicación en el contenedor. Utilizará la base de datos H2 embebida. Este contenedor para el despliegue de PetClinic será independiente de la configuración _Dev Containers_ que ya posee el proyecto PetClinic, así como del entorno _docker-compose_. Se podría haber optado por desplegar PetClinic con _docker-compose_, pero en este caso vamos a desplegarlo como un contenedor independiente.
+
 A continuación se describe cómo crear un contenedor Docker de la aplicación PetClinic. Los pasos se realizan en local, y al final configuraremos el pipeline de Jenkins para que se realicen automáticamente. 
 
 [TIP]
