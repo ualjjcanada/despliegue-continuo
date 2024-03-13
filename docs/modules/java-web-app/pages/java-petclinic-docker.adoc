@@ -20,15 +20,15 @@ Hasta ahora nos estamos basando en el proyecto _PetClinic_ original (genéricame
 
 Para construir aplicaciones Maven con Docker y luego https://spring.io/guides/gs/spring-boot-docker/[crear el contendedor de Docker] que empaquete la aplicación, la opción recomendada es usar https://docs.docker.com/get-started/09_image_best/#multi-stage-builds[*Multi-Stage Builds*] en tu Dockerfile, de manera que:
 
-* Una primera fase o _stage_ construye el `.jar` a partir de una imagen de Maven, como por ejemplo `maven:3.8.4-openjdk-11-slim`
-* Y luego en una segunda fase, ese `.jar` lo copia en el contenedor basado en la imagen OpenJDK-11, que es el entorno de ejecución Java necesario.
+* Una primera fase o _stage_ construye el `.jar` a partir de una imagen de Maven, como por ejemplo `maven:3.9-eclipse-temurin-17-focal`
+* Y luego en una segunda fase, ese `.jar` lo copia en el contenedor basado en la imagen Alpine (slim) con Java 17, que es el entorno de ejecución Java necesario.
 
 La documentación de PetClinic indica cómo construir el contenedor usando https://github.com/spring-projects/spring-petclinic#building-a-container[Spring Boot build plugin]. A nosotros nos interesa ver cómo hacerlo de forma genérica para cualquier aplicación Java basada en Maven. Vamos a definir el siguiente archivo `Dockerfile` que debe estar en la carpeta raíz del proyecto PetClinic:
 
 .Dockerfile multi-stage
 [source, docker]
 ----
-FROM maven:3.8.4-openjdk-11-slim AS build <1>
+FROM maven:3.9-eclipse-temurin-17-focal AS build <1>
 WORKDIR /app
 # First copy only the pom file. This is the file with less change
 COPY ./pom.xml .
@@ -40,7 +40,7 @@ COPY ./ .
 RUN mvn -B -f ./pom.xml -s /usr/share/maven/ref/settings-docker.xml clean package 
 
 # Start with a base image containing Java runtime
-FROM openjdk:11-slim <2>
+FROM maven:3.9.6-eclipse-temurin-17-alpine <2>
 # Make port 8080 available to the world outside this container
 EXPOSE 8080
 # The application's jar file
@@ -52,7 +52,7 @@ ENTRYPOINT ["java","-jar","/app.jar"]
 ----
 <1> Primera fase o _stage_ de _build_, construye la aplicación llamando a los goals `clean package` de Maven. Contiene los pasos básicos para construir una aplicación Java basada en Maven. Dicha construcción la divide en dos partes, primero copia el `pom.xml` y descarga las dependencias con `dependency:go-offline`, y luego copia todos los fuentes y construye el proyecto con `package`. De esta forma se optimiza la reconstrucción del contenedor ya que la descarga de dependencias es una etapa que dura varios minutos. 
 
-<2> Segunda fase, crea una imagen con el entorno de ejecución de Java 11 y el empaquetado `.jar` de la aplicación PetClinic. Contiene los pasos básicos para ejecutar una aplicación String Boot en un contenedor: partiendo de una imagen de `openjdk`, copia el archivo `target/*.jar` en el contenedor con el nombre `app.jar` y lo ejecuta mediante el comando `ENTRYPOINT` para que no haya ninguna shell sobre el proceso `java`. 
+<2> Segunda fase, crea una imagen basada en la imagen Alpine de Java 17. Esta imagen está basada en el proyecto Alpine Linux que es una distribución mucho más pequeña (~5MB), y por tanto genera imágenes más pequeñas en general. Contiene los pasos básicos para ejecutar una aplicación String Boot en un contenedor: partiendo de una imagen alpine (slim), copia el archivo `target/*.jar` en el contenedor con el nombre `app.jar` y lo ejecuta mediante el comando `ENTRYPOINT` para que no haya ninguna shell sobre el proceso `java`. 
 
 Construye el contenedor con `docker build`, y ten paciencia, tardará varios minutos!!!
 
@@ -62,11 +62,11 @@ docker build -t petclinic-docker .
 ----
 
 .Docker build
-image::docker-build-petclinic.png[role="thumb", align="center"]
+image::docker-build-petclinic-2024.png[role="thumb", align="center"]
 
 [WARNING]
 ====
-Si estás trabajando en Windows, la https://forums.docker.com/t/formatting-violations-found-in-the-java-files-when-docker-run/119576[construcción da un error] por problemas de codificación de los saltos de línea diferentes entre Windows y Linux. Para resolverlo, sustituye en la primera fase del Dockerfile la linea de construcción que llama a `package` por estas dos: 
+Si estás trabajando en Windows, la https://forums.docker.com/t/formatting-violations-found-in-the-java-files-when-docker-run/119576[construcción podría dar un error] por problemas de codificación de los saltos de línea diferentes entre Windows y Linux. Para resolverlo, sustituye en la primera fase del Dockerfile la linea de construcción que llama a `package` por estas dos: 
 [source, docker]
 ----
 # Then build the code - on Linux <1>
@@ -91,26 +91,35 @@ Comprueba que se ha iniciado la aplicación en http://localhost:8080.
 
 Para el contenedor con CTRL+C.
 
-Una vez creada la imagen con `docker build` y probada su ejecución con `docker run`, el siguiente paso será publicar la imagen en un registro de contenedores, mediante `docker push`. Podemos usar https://hub.docker.com/[DockerHub] pero en este caso vamos a usar Google Cloud https://cloud.google.com/container-registry?hl=es[Container Registry]. 
+Una vez creada la imagen con `docker build` y probada su ejecución con `docker run`, el siguiente paso será publicar la imagen en un registro de contenedores, mediante `docker push`. Podemos usar https://hub.docker.com/[DockerHub] pero en este caso vamos a usar Google Cloud https://cloud.google.com/artifact-registry/docs?hl=es[Artifact Registry]. 
 
-== Autenticación en Container Registry
+== Autenticación en Artifact Registry
 
-Para poder hacer `push` debemos tener permisos de escritura, y por tanto debemos autenticarnos en el servicio Container Registry. 
+Para poder hacer `push` de la imagen del contenedor a un registro de contenedores, como Google Artifact Registry, debemos tener permisos de escritura, y por tanto debemos autenticarnos en el servicio Artifact Registry. 
 
-https://cloud.google.com/container-registry/docs/advanced-authentication[Authentication] permite conectar al Registro de Contenedores con tus credenciales, y  hacer push y pull de imágenes. Para ello debes configurar los los permisos necesarios para accdeder al registro, utilizando un  https://cloud.google.com/container-registry/docs/advanced-authentication#json-key[JSON key file] como método de autenticación:
+[WARNING]
+====
+Container Registry era hasta ahora el servicio de Google Cloud para el registro de contenedores, pero ha sido reemplazado por Artifact Registry. Aunque Container Registry sigue funcionando, se recomienda usar Artifact Registry.
+
+.Container Registry is deprecated
+image::container-registry-deprecated.png[role="thumb", align="center"]
+
+====
+
+
+Configura la  https://cloud.google.com/artifact-registry/docs/docker/authentication[autenticación para Docker] para conectar al Registro de Contenedores con tus credenciales, y hacer `push` y `pull` de tus imágenes. Para ello debes configurar los los permisos necesarios para acceder al registro, utilizando una https://cloud.google.com/artifact-registry/docs/docker/authentication?hl=es#json-key[clave de cuenta de servicio (JSON key file)] como método de autenticación:
 
 * En la Consola Google Cloud, seleccionar el proyecto Google Cloud.
 * En el menú de navegación seleccionar `IAM y administración | https://console.cloud.google.com/apis/credentials/serviceaccountkey[Cuentas de servicio]`.
 * Seleccionar `Crear cuenta de servicio`.
-* Darle un nombre (p.e. `container-registry`)
+* Darle un nombre (p.e. `artifact-registry`)
 * Seleccionar "Crear y continuar".
-* En el paso `Conceder a esta cuenta de servicio acceso al proyecto` del asistente, seleccionar el rol `Cloud Storage -> Administrador de almacenamiento`. Continuar y Listo.
+* En el paso `Conceder a esta cuenta de servicio acceso al proyecto` del asistente, seleccionar el rol `Administrador de Artifact Registry`. Continuar y Listo.
 * Editar la Cuenta de servicio. En la sección `Claves` seleccionar `Agregar clave | Crear nueva clave`.
 * Dejar `JSON` en el tipo de clave.
 * Seleccionar `Crear`. A continuación se descargará la clave privada.
 
-.Creación Service Account Key for pull/push on Container Registry
-image::cloud-containers-registry-key-create.png[role="thumb", align="center"]
+
 
 [start=2]
 . Guarda el archivo `.json` en la carpeta `secret` de tu proyecto PetClinic. 
@@ -123,24 +132,15 @@ No olvides añadir la carpeta `secret/` al archivo `.gitignore` para evitar publ
 [start=3]
 . _Use the service account key as your password to authenticate with Docker._ Sustituye `keyfile.json` por el nombre de tu archivo de credenciales:
 
-.. En Linux: 
-
 [source, bash]
 ----
-cat keyfile.json | docker login -u _json_key --password-stdin https://gcr.io
+cat keyfile.json | docker login -u _json_keyE --password-stdin https://LOCATION-docker.pkg.dev <1>
 ----
-
-[start=2,]
-  .. En Windows:
-
-[source, bash]
-----
-docker login -u _json_key --password-stdin https://gcr.io < keyfile.json
-----
+<1> `LOCATION` es la ubicación regional o multirregional del repositorio en el que se almacena la imagen. Por ejemplo, `https://us-east1-docker.pkg.dev` para este de estados unidos (recomendado).
 
 
 .Autenticación de Docker contra Container Registry
-image::cloud-containers-registry-login.png[role="thumb", align="center"]
+image::cloud-containers-registry-login-2024.png[role="thumb", align="center"]
 
 
 
@@ -151,24 +151,62 @@ image::cloud-containers-registry-login.png[role="thumb", align="center"]
 
 [source, bash]
 ----
-GOOGLE_CLOUD_PROJECT=cnsa-2022-user123
+GOOGLE_CLOUD_PROJECT=cnsa-2024-user123
 
-docker build -t gcr.io/$GOOGLE_CLOUD_PROJECT/petclinic:1.0 .
+docker build -t eu-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/petclinic:1.0 .
 ----
 
  
 [start=2]
-. A continuación vamos a publicar con `docker push`: habilita la API de Container Registry en tu proyecto GCP, accediendo en el menú a Container Registry > Images:
+. A continuación vamos a publicar con `docker push`: habilita la API de Artifact Registry en tu proyecto GCP, accediendo a la URL https://console.cloud.google.com/apis/library/artifactregistry.googleapis.com[https://console.cloud.google.com/apis/library/artifactregistry.googleapis.com] y habilitando la API.
 
 .Habilitar la API Container Registry
-image::container-registry-habilitar-api.png[role="thumb", align="center"]
+image::artifact-registry-habilitar-api-2024.png[role="thumb", align="center"]
+
+. Si el repositorio de destino no existe, crea un repositorio nuevo. Debes tener al menos el access de escritor de Artifact Registry al repositorio.
+
+Cuando creas un repositorio, debes establecer la siguiente configuración que no se puede cambiar después de crearlo:
+
+    Formato del artefacto.
+    Modo de repositorio, si hay varios modos disponibles para el formato seleccionado
+    Ubicación del repositorio
+    Encriptación con claves administradas por Google o claves de encriptación administradas por el cliente Artifact Registry usa claves de encriptación administradas por Google de forma predeterminada.
+
+Crea un repositorio con la consola de Google Cloud
+
+Abre la página Repositorios en la consola de Google Cloud.
+https://console.cloud.google.com/artifacts?hl=es
+
+Especifica el nombre del repositorio. Para la ubicación de cada repositorio en un proyecto, los nombres de los repositorios deben ser únicos.
+
+Selecciona el formato del repositorio: docker.
+
+Si hay varios modos de repositorio disponibles, selecciona Estándar
+
+En Tipo de ubicación, elige la ubicación para el repositorio:
+
+    Elige el tipo de ubicación: Región o Multirregional. La lista de ubicaciones cambia para reflejar tu selección.
+
+    En la lista Región, selecciona una ubicación: us-east1
+Agrega una descripción para el repositorio. Las descripciones ayudan a identificar el propósito del repositorio y el tipo de artefactos que contiene.
+
+En la sección Encriptación, elige el mecanismo de encriptación del repositorio.
+
+    Clave administrada por Google: Encripta el contenido de un repositorio mediante una clave de encriptación administrada por Google.
+Haz clic en Crear.
+
+
+
+
+.Haz clic en Crear repositorio.
+image::artifact-registry-crea-repositorio-2024.png[role="thumb", align="center"]
 
 [start=3]
 . Publica la imagen con ```docker push [HOSTNAME]/[PROJECT-ID]/[IMAGE]:[TAG]```: 
 
 [source, bash]
 ----
-docker push gcr.io/$GOOGLE_CLOUD_PROJECT/petclinic:1.0
+docker push eu-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/petclinic:1.0
 ----
 
 [start=4]

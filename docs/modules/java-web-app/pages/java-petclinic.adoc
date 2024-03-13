@@ -122,6 +122,46 @@ image::petclinic-pipeline-build-1-2024.png[role="thumb", align="center"]
 
 Si realizamos una segunda ejecución, ya aparecerá la gráfica de evolución de los tests de JUnit. 
 
+[NOTE]
+====
+Alternativamente, podemos hacer que la construcción se realice en un agente que sea un contenedor docker:
+[source,groovy]
+----
+pipeline {
+   agent {
+        docker { <1>
+            image 'maven:3.9-eclipse-temurin-17-focal'
+            args '-v $HOME/.m2:/root/.m2'
+        }
+    } 
+
+  stages { 
+    stage('Git fetch') { 
+      steps {
+        // Get some code from a GitHub repository
+        git branch:'main', url:'https://github.com/spring-projects/spring-petclinic.git'
+      }
+    }
+    stage('Compile, Test, Package') { 
+      steps {
+        // Run goal 'package' includes compile, test and package.
+        sh "mvn clean package -Dcheckstyle.skip -Dtest=!PostgresIntegrationTests*"
+      }
+      post { 
+        // If Maven was able to run the tests, even if some of the test
+        // failed, record the test results and archive the jar file.
+        success {
+          junit '**/target/surefire-reports/TEST-*.xml'
+          archiveArtifacts 'target/*.jar'
+        }
+      }
+    }
+  }
+}
+----
+<1> Agente donde construir el proyecto, ahora no se hace en el nodo principal sino en un contenedor docker seleccionado. La imagen de Maven que se utiliza es `maven:3.9-eclipse-temurin-17-focal`, y se monta el volumen del directorio `.m2` del usuario en el contenedor.
+
+====
 == Informe de Cobertura de código
 
 Jenkins nos permite publicar métricas asociadas al proyecto. Una de ellas, es la cobertura de código ejecutado por las pruebas. 
